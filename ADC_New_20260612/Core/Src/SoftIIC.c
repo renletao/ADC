@@ -65,8 +65,8 @@ void IIC_DeInit(I2CInfo *info)
 	IIC_DeMspInit(info->portSda,info->pinSda,info->portScl,info->pinScl);
 	info->portSda = NULL;
 	info->portScl = NULL;
-	info->pinSda = NULL;
-	info->pinScl = NULL;
+	info->pinSda = 0;
+	info->pinScl = 0;
 }
 
 /**
@@ -216,7 +216,8 @@ uint8_t I2C_ReadNByte(I2CInfo *info,uint8_t addr,uint8_t *readData,uint32_t lent
 	else return err;
 	iic_start(info);
 	iic_sendbyte(info,addr | IIC_READ);
-	if(iic_wait_ack(info))return err;
+	err = iic_wait_ack(info);
+	if (err) { iic_stop(info); return err; }
 	for (i = 0; i < lenth; i++) 
 	{
 		if (i != (lenth - 1)) 

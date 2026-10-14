@@ -9,7 +9,7 @@
 #include "main.h"
 #include "CmdHelper.h"
 #include "usart.h"
-#include "ads1220.h"
+#include "ADS1220.h"
 #include "flash.h"
 #include "owi.h"
 #include "tim.h"
@@ -17,6 +17,10 @@
 #include "SoftIIC.h"
 #include "MCP4725.h"
 #include "SoftUart.h"
+#include "wf183.h"
+#include "wf100s.h"
+#include "wf2200.h"
+#include "wf280.h"
 //一类：系统指令
 //二类：串口通讯方式指令
 //三类: IIC通讯方式指令
@@ -25,15 +29,45 @@
 const uint8_t FIRMWARE_VERSION[] = { 0x01, 0x00 };
 #define DATA_LENTH					64
 
-/************tasks****************/
+volatile uint8_t IsTaskDone;
+volatile uint8_t IsTask_mub;
+uint16_t sendBufBy[PRODUCT_RESULT_LENGTH];
 
-/**********************************/
+void RunPendingProductTest(void)
+{
+    if (!IsTaskDone) return;
+    memset(sendBufBy, 0, sizeof(sendBufBy));
+    switch (IsTask_mub) {
+    case WF183DE: AllTestFor183(sendBufBy, PRODUCT_RESULT_LENGTH); break;
+    case WF100S: AllTestFor100S(sendBufBy, PRODUCT_RESULT_LENGTH); break;
+    case WF2200: AllTestFor2200(sendBufBy, PRODUCT_RESULT_LENGTH); break;
+    default: break;
+    }
+    IsTaskDone = 0;
+}
 
-void ParseSystemCmd(uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_lens) 
+void ParseSystemCmd(const uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_lens)
 {
 	uint16_t Vout = 0;
+    uint64_t saved_adc[2] = {0};
 	uint32_t ADC_Value = 0;
-	uint16_t cmdHead = cmd[1];
+	uint16_t cmdHead;
+    uint8_t required_cmd = 2;
+    uint16_t required_out = 1;
+    if (!cmd || !out || !out_lens) return;
+    if (cmd_lens < 2) { out[0] = CMD_ERROR_LENGTH; return; }
+    cmdHead = cmd[1];
+    switch (cmdHead) {
+    case TYPE1_GET_VERSION: required_out = 2; break;
+    case TYPE1_GET_ADC: case TYPE1_READ_ADC: required_out = 4; break;
+    case TYPE1_SET_ADC: case TYPE1_SAVE_ADC: required_cmd = 6; break;
+    case TYPE1_SET_VDD: required_cmd = 4; break;
+    case TYPE1_SET_VPP: required_cmd = 3; break;
+    default: break;
+    }
+    if (cmd_lens < required_cmd || out_lens < required_out) {
+        out[0] = CMD_ERROR_LENGTH; return;
+    }
 	switch (cmdHead) 
 	{
 		
@@ -69,7 +103,8 @@ void ParseSystemCmd(uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out
 			ADS1220.config[2] = cmd[4];
 			ADS1220.config[3] = cmd[5];
 			ADS1220_Init(&ADS1220);
-			Write_Flash(FLASH_USER_START_ADDR,(uint64_t*)&ADS1220, 16);
+			memcpy(saved_adc, &ADS1220, sizeof(ADS1220));
+            Write_Flash(FLASH_USER_START_ADDR, saved_adc, 2);
         
 			out[0] = ADS1220.state;
 		break;
@@ -84,78 +119,82 @@ void ParseSystemCmd(uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out
 		case TYPE1_SET_VDD://201：设置adc供电使能 
 		  Vout = ((uint16_t)(cmd[3] << 8) | cmd[2]);
 			MCP4725_WriteData_Voltage(Vout);
+            out[0] = 0;
 		break;
 				
 		case TYPE1_SET_VPP://202：设置VPP供电使能 
 			HAL_GPIO_WritePin(VPP_EN_GPIO_Port, VPP_EN_Pin, cmd[2] ? GPIO_PIN_SET:GPIO_PIN_RESET);
 			out[0] =HAL_GPIO_ReadPin(VPP_EN_GPIO_Port, VPP_EN_Pin);
 		break;
-			    
-		default:
+
+        case TYPE1_GET_TASK_STATUS:
+            out[0] = IsTaskDone;
+            break;
+        case TYPE1_GET_ALLTEST_DATA:
+            if (IsTaskDone) out[0] = CMD_ERROR_BUSY;
+            else memcpy(out, sendBufBy, (out_lens < PRODUCT_RESULT_LENGTH ? out_lens : PRODUCT_RESULT_LENGTH) * sizeof(*out));
+            break;
+        case TYPE1_WF3050_FT_DATA:
+            if (out_lens < 12u) out[0] = CMD_ERROR_LENGTH;
+            else WF3050FtData(out, out_lens);
+            break;
+        default:
 		break;
 	}
 }
 
-void ParseSerialCmd(uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_lens)
+void ParseSerialCmd(const uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_lens)
 {
-	uint16_t sendLens = cmd[2];
-	uint16_t sendTimeout = cmd[3];
-	uint16_t recvLens = cmd[4];
-	uint16_t recvTimeout = cmd[5];
-	
-	uint8_t SendBuff[DATA_LENTH] = {0};
-	uint8_t RecvBuff[DATA_LENTH] = {0};
-	for(uint8_t i = 0; i<sendLens;i++)
-	{
-		SendBuff[i] = cmd[i+6];
-	}
-	
-	UART_Init(&uart1,9600,UART_RX_GPIO_Port,UART_RX_Pin,UART_TX_GPIO_Port,UART_TX_Pin);	
-	osDelay(10);
-	
-	Soft_Uart_Send(&uart1, SendBuff, sendLens,sendTimeout);
-	Soft_Uart_Recv(&uart1, RecvBuff, recvLens,recvTimeout);
-	
-	out[1] = (uint8_t)(1000000/uart1.Save_BuadRate);
-	out[0] = (uint8_t)((uint16_t)(1000000/uart1.Save_BuadRate)>>8);
-	
-	for(uint8_t i = 0; i<recvLens;i++)
-	{
-		out[i+2] = RecvBuff[i];
-	}
-	
-	UART_DeInit(&uart1);	
+    uint16_t sendLens, recvLens, i, baud = 0;
+    uint8_t SendBuff[DATA_LENTH] = {0};
+    uint8_t RecvBuff[DATA_LENTH] = {0};
+    if (!cmd || !out || !out_lens) return;
+    if (cmd_lens < 6) { out[0] = CMD_ERROR_LENGTH; return; }
+    sendLens = cmd[2]; recvLens = cmd[4];
+    if (sendLens > DATA_LENTH || recvLens > DATA_LENTH ||
+        cmd_lens < 6u + sendLens || out_lens < 2u + recvLens) {
+        out[0] = CMD_ERROR_LENGTH; return;
+    }
+    memset(out, 0, out_lens * sizeof(*out));
+    for (i = 0; i < sendLens; ++i) SendBuff[i] = (uint8_t)cmd[i + 6u];
+    UART_Init(&uart1, 9600, UART_TX_GPIO_Port, UART_TX_Pin, UART_RX_GPIO_Port, UART_RX_Pin);
+    osDelay(10);
+    Soft_Uart_Send(&uart1, SendBuff, sendLens, cmd[3]);
+    if (recvLens) Soft_Uart_Recv(&uart1, RecvBuff, recvLens, cmd[5]);
+    if (uart1.Save_BuadRate > 0) baud = (uint16_t)(1000000.0f / uart1.Save_BuadRate);
+    out[0] = (uint8_t)(baud >> 8); out[1] = (uint8_t)baud;
+    for (i = 0; i < recvLens; ++i) out[i + 2u] = RecvBuff[i];
+    UART_DeInit(&uart1);
 }
 
-void ParseI2CCmd(uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_lens) 
-{ 
-	uint16_t sendLens = cmd[2];
-	uint16_t recvLens = cmd[4];
-	uint8_t SendBuff[DATA_LENTH] = {0};
-	uint8_t RecvBuff[DATA_LENTH] = {0};
-	
-	for(uint8_t i = 0; i<sendLens;i++)
-	{
-		SendBuff[i] = cmd[i+6];
-	}
-	
-	IIC_Init(&i2c1,I2C_SDA_GPIO_Port,I2C_SDA_Pin,I2C_SCL_GPIO_Port,I2C_SCL_Pin);
-	osDelay(10);
-	
-	I2C_WriteNByte(&i2c1,SendBuff,sendLens);
-	I2C_ReadNByte(&i2c1,SendBuff[0],RecvBuff,recvLens);
-		
-	for(uint8_t i = 0; i<recvLens;i++)
-	{
-		out[i+2] = RecvBuff[i];
-	}
-	
-	IIC_DeInit(&i2c1);
+void ParseI2CCmd(const uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_lens)
+{
+    uint16_t sendLens, recvLens, i;
+    uint8_t SendBuff[DATA_LENTH] = {0};
+    uint8_t RecvBuff[DATA_LENTH] = {0};
+    if (!cmd || !out || !out_lens) return;
+    if (cmd_lens < 7u) { out[0] = CMD_ERROR_LENGTH; return; }
+    sendLens = cmd[2]; recvLens = cmd[4];
+    if (!sendLens || sendLens > DATA_LENTH || recvLens > DATA_LENTH ||
+        cmd_lens < 6u + sendLens || out_lens < 2u + recvLens) {
+        out[0] = CMD_ERROR_LENGTH; return;
+    }
+    memset(out, 0, out_lens * sizeof(*out));
+    for (i = 0; i < sendLens; ++i) SendBuff[i] = (uint8_t)cmd[i + 6u];
+    IIC_Init(&i2c1, I2C_SDA_GPIO_Port, I2C_SDA_Pin, I2C_SCL_GPIO_Port, I2C_SCL_Pin);
+    osDelay(10);
+    out[0] = I2C_WriteNByte(&i2c1, SendBuff, sendLens);
+    if (!out[0] && recvLens) {
+        out[1] = I2C_ReadNByte(&i2c1, SendBuff[0], RecvBuff, recvLens);
+        for (i = 0; i < recvLens; ++i) out[i + 2u] = RecvBuff[i];
+    }
+    IIC_DeInit(&i2c1);
 }
 
-void ParseOwiCmd(uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_lens)
+void ParseOwiCmd(const uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_lens)
 {
 	uint8_t RecvBuff[DATA_LENTH] = {0};
+    if (!out || out_lens < 4u) return;
 	OWI_Device.cycle = 0;
 	OWI(RecvBuff,200);
 	osDelay(100);
@@ -168,9 +207,16 @@ void ParseOwiCmd(uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_le
 /*
  *
  */
-void Parse(uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_lens) 
+void Parse(const uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_lens)
 {
-	uint16_t cmdType = cmd[0];
+	uint16_t cmdType;
+    if (!cmd || !cmd_lens || !out || !out_lens) return;
+    cmdType = cmd[0];
+    /* Only status/results may be queried while the product task owns the peripherals. */
+    if (IsTaskDone && !(cmdType == 1 && cmd_lens >= 2u &&
+        (cmd[1] == TYPE1_GET_TASK_STATUS || cmd[1] == TYPE1_GET_ALLTEST_DATA))) {
+        out[0] = CMD_ERROR_BUSY; return;
+    }
 	switch (cmdType) 
 	{
 		
@@ -190,9 +236,18 @@ void Parse(uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_lens)
 			ParseOwiCmd(cmd, cmd_lens, out, out_lens);
 		break;
 		
-		default:
-		break;
-	}
+        case 8: case 9: case 10:
+            IsTask_mub = cmdType == 8 ? WF183DE : (cmdType == 9 ? WF100S : WF2200);
+            IsTaskDone = 1;
+            out[0] = 1;
+            break;
+        case 11:
+            if (out_lens < WF280_RESULT_LENGTH) out[0] = CMD_ERROR_LENGTH;
+            else WF280CheckOtpReg(out, out_lens);
+            break;
+        default:
+            break;
+    }
 }
 
 // 拷贝 src 到 dest，然后清零 src

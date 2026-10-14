@@ -9,6 +9,7 @@
 #define INC_CMDHELPER_H_
 
 #include "stm32g0xx_hal.h"
+#include <stddef.h>
 
 #define TYPE1_GET_VERSION 					0x104
 #define TYPE1_GET_ADC	 							0x105
@@ -18,11 +19,30 @@
 #define TYPE1_READ_ADC							0x108
 #define TYPE1_CALIB									0x109
 #define TYPE1_SAVE_ADC							0x200
+#define TYPE1_GET_TASK_STATUS 0x400
+#define TYPE1_GET_ALLTEST_DATA 0x401
+#define TYPE1_WF3050_FT_DATA 0x567
 
-void Parse(uint16_t* cmd, uint8_t cmd_lens, uint16_t* out, uint16_t out_lens);
-void ParseSystemCmd(uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_lens);
+/* Same default voltage as MCP4725_Init(); override for the actual product. */
+#ifndef PRODUCT_TEST_VDD_MV
+#define PRODUCT_TEST_VDD_MV 5000u
+#endif
+#define WF183DE 0u
+#define WF2200 1u
+#define WF100S 2u
+#define PRODUCT_RESULT_LENGTH 120u
+#define CMD_ERROR_BUSY 0xF1u
+#define CMD_ERROR_LENGTH 0xF2u
+
+extern volatile uint8_t IsTaskDone; /* 1: queued/running, 0: idle/completed */
+extern volatile uint8_t IsTask_mub;
+extern uint16_t sendBufBy[PRODUCT_RESULT_LENGTH];
+void RunPendingProductTest(void);
+
+void Parse(const uint16_t* cmd, uint8_t cmd_lens, uint16_t* out, uint16_t out_lens);
+void ParseSystemCmd(const uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_lens);
 void CopyAndClear(uint16_t* src, uint16_t* dest, size_t len);
-void ParseI2CCmd(uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_lens);
-void ParseSerialCmd(uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_lens);
-void ParseProductCmd(uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_lens);
+void ParseI2CCmd(const uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_lens);
+void ParseSerialCmd(const uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_lens);
+void ParseOwiCmd(const uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_lens);
 #endif /* INC_CMDHELPER_H_ */

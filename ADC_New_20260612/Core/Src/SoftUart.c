@@ -89,8 +89,8 @@ void UART_DeInit(UartInfo *uart)
 	UART_DeMspInit(uart->Tx_Port,uart->Tx_Pin,uart->Rx_Port,uart->Rx_Pin);
 	uart->Tx_Port = NULL;
 	uart->Rx_Port = NULL;
-	uart->Tx_Pin = NULL;
-	uart->Rx_Pin = NULL;
+	uart->Tx_Pin = 0;
+	uart->Rx_Pin = 0;
 	uart->BuadRate = 0;
 }
 
@@ -132,7 +132,7 @@ uint16_t Wiat_For_Level(UartInfo *uart,uint8_t level,uint32_t timout)
  */
 uint16_t Read_Level(UartInfo *uart,uint32_t timout)
 {
-	uint8_t level = 0;
+	uint32_t level = 0;
 	uint32_t Count = 0;
 	__HAL_TIM_SetCounter(&htim2,0);
 	while(__HAL_TIM_GET_COUNTER(&htim2) <= timout)
@@ -151,13 +151,17 @@ uint8_t Soft_Uart_Read_Bit(UartInfo *uart,uint32_t timout)
 {
 	uint8_t data = 0;
 	uint8_t Count = 0;
-	uint8_t Tim = 0;
-	Wiat_For_Level(uart,GPIO_PIN_RESET,timout);		//等待低电平开始
+	uint32_t Tim = 0;
+	Wiat_For_Level(uart,GPIO_PIN_RESET,timout);
+    if (HAL_GPIO_ReadPin(uart->Rx_Port, uart->Rx_Pin) != GPIO_PIN_RESET) return 0;		//等待低电平开始
 	//判断波特率
 	if(uart->Save_BuadRate == 0) 
 	{
 		Tim = Wiat_For_Level(uart,GPIO_PIN_SET,timout);
-		Count = Tim/uart->BuadRate + ((Tim % uart->BuadRate)>=uart->BuadRate/2);
+		if (HAL_GPIO_ReadPin(uart->Rx_Port, uart->Rx_Pin) != GPIO_PIN_SET) return 0;
+        if (!uart->BuadRate || Tim < uart->BuadRate / 2u || Tim > 9u * uart->BuadRate + uart->BuadRate / 2u) return 0;
+        Count = Tim/uart->BuadRate + ((Tim % uart->BuadRate)>=uart->BuadRate/2);
+        if (Count < 1u || Count > 9u) return 0;
 		data >>= Count - 1;
 		uart->Save_BuadRate = (float)Tim/Count;
 	}

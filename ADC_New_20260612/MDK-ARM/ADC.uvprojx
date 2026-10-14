@@ -416,6 +416,36 @@
               <FilePath>..\Core\Src\SoftIIC.c</FilePath>
             </File>
             <File>
+              <FileName>wf280.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\wf280.c</FilePath>
+            </File>
+            <File>
+              <FileName>wf183.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\wf183.c</FilePath>
+            </File>
+            <File>
+              <FileName>wf2200.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\wf2200.c</FilePath>
+            </File>
+            <File>
+              <FileName>wf100s.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\wf100s.c</FilePath>
+            </File>
+            <File>
+              <FileName>I2CHelper.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\I2CHelper.c</FilePath>
+            </File>
+            <File>
+              <FileName>SoftIIC_PP.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\SoftIIC_PP.c</FilePath>
+            </File>
+            <File>
               <FileName>CmdHelper.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Core\Src\CmdHelper.c</FilePath>

@@ -62,6 +62,8 @@
 /* USER CODE END Variables */
 osThreadId defaultTaskHandle;
 osThreadId myTask02Handle;
+osThreadId productTaskHandle;
+static volatile uint8_t product_drivers_ready;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -70,6 +72,7 @@ osThreadId myTask02Handle;
 
 void StartDefaultTask(void const * argument);
 void ModbusTask(void const * argument);
+void ProductTestTask(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -105,10 +108,13 @@ void MX_FREERTOS_Init(void) {
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* definition and creation of myTask02 */
-  osThreadDef(myTask02, ModbusTask, osPriorityIdle, 0, 128);
+  osThreadDef(myTask02, ModbusTask, osPriorityIdle, 0, 256);
   myTask02Handle = osThreadCreate(osThread(myTask02), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
+  osThreadDef(productTask, ProductTestTask, osPriorityNormal, 0, 256);
+  productTaskHandle = osThreadCreate(osThread(productTask), NULL);
+  if (!defaultTaskHandle || !myTask02Handle || !productTaskHandle) Error_Handler();
   /* add threads, ... */
     
   /* definition and creation of myTask02 */
@@ -157,11 +163,12 @@ void ModbusTask(void const * argument)
   /* Infinite loop */
 	HAL_TIM_Base_Start(&htim1);
 	HAL_TIM_Base_Start(&htim2);
-	ST_Flash_Read(FLASH_USER_START_ADDR,20,(uint8_t*)&ADS1220);
+	ST_Flash_Read(FLASH_USER_START_ADDR, sizeof(ADS1220), &ADS1220);
 	ADS1220_Init(&ADS1220);
 	MCP4725_Init();
 	eMBInit(MB_RTU, SLAVE_ADDRESS, SLAVE_ADDRESS, 115200, MB_PAR_NONE);
 	eMBEnable();
+    product_drivers_ready = 1;
 	/* Infinite loop */
 	for (;;) {
 		eMBPoll();
@@ -172,6 +179,15 @@ void ModbusTask(void const * argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
+void ProductTestTask(void const * argument)
+{
+    (void)argument;
+    for (;;) {
+        if (product_drivers_ready) RunPendingProductTest();
+        osDelay(1);
+    }
+}
+
 
 /* USER CODE END Application */
 

@@ -27,7 +27,7 @@
 
 旧版 `{0x201, 0xFF}` 开关命令已经转换为新版 `{0x201, 电压低字节, 电压高字节}`：3300 mV 为 `{1, 0x201, 0xE4, 0x0C}`，5000 mV 为 `{1, 0x201, 0x88, 0x13}`。
 
-产品内部 I2C 向量使用新版格式：`{3, reserved, send_len, reserved, recv_len, reserved, address, payload...}`。`send_len` 包含地址字节，地址使用原来的 8 位总线地址（`0xDA`、`0x70`）。`ProductI2CTransfer()` 使用新版底层驱动，并保留产品结果中“数据从偏移 0 开始，紧随其后为状态”的布局；单独读取不会额外发送地址写事务。对外通用 I2C 命令仍先写后读，`out[0]` 为写状态、`out[1]` 为读状态、数据从 `out[2]` 开始，0 表示成功、1 表示 NACK。
+产品内部 I2C 向量使用新版格式：`{3, reserved, send_len, reserved, recv_len, reserved, address, payload...}`。`send_len` 包含地址字节，地址使用原来的 8 位总线地址（`0xDA`、`0x70`）。`ProductI2CTransfer()` 使用新版底层驱动，并保留产品结果中“数据从偏移 0 开始，紧随其后为状态”的布局；单独读取不会额外发送地址写事务。对外通用 I2C 命令仍先写后读，`out[0]` 为写状态、`out[1]` 为读状态、数据从 `out[2]` 开始，0 表示成功、1 表示通信失败（NACK、SCL 超时或总线卡住）。
 
 ## Modbus 调用
 
@@ -56,5 +56,6 @@ WF100S 测试完成后恢复原 ADS1220 配置寄存器 0。另修复了新版 U
 - 使用 STM32CubeIDE 随附的 ARM GCC 13.3.1 对 Keil 列表中的 71 个 C 编译单元进行编译检查（Keil 汇编形式的 FreeRTOS port.c 单独处理），新增和修改的业务/通信文件无编译警告。
 - 完整 GNU 链接验证使用与项目内核匹配的 FreeRTOS V10.3.1 GNU Cortex-M0 port、项目附带的 GNU 启动文件和临时链接脚本；将 assert 映射为嵌入式停机处理。Flash 为 64 KB、RAM 为 8 KB，包含 1 KB 主栈和 512 字节运行库堆预留，链接通过。GNU 验证文件仅放在临时目录，不替换原 Keil 启动文件或 RTOS port。
 - 运行 `python3 tests/test_port.py` 可复现主机回归测试，使用 AddressSanitizer/UndefinedBehaviorSanitizer 检查真实产品代码的命令、结果布局、异步入口、边界、供电结束、配置恢复、OTP 不一致/NACK；同时验证真实 I2C/推挽 I2C/UART 驱动的无响应路径。硬件外设在该测试中模拟。
+- 运行 `python3 tests/test_soft_i2c.py` 可验证真实软件 I2C 驱动的位时序、完整 ACK 时钟、末字节 NACK、SDA 交接、时钟拉伸、超时/总线恢复、DAC 引脚和产品采集路径；并验证 `main.c` 的微秒延时在计数器回绕及中断跨过终点时正确退出。详情见 [SOFT_I2C.md](SOFT_I2C.md)。
 - 没有重新生成原 `MDK-ARM/ADC/ADC.hex`；它仍是历史固件。交付前应在 Keil 对 `ADC.uvprojx` 执行 Rebuild，再烧录新 HEX。
 - 未连接实板。实际 VDD 输出、参考传感器推挽时序、UART 波特率，以及 WF183 沿用的 120 Ω 电流换算/20 mA 阈值，需按新板原理图和实测确认。片上 ADC1/DMA 的 VDD 反馈闭环保持新版现有状态，不在本次产品接口移植中新增。

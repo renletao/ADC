@@ -96,7 +96,7 @@ void Soft_Uart_Recv(UartInfo *u,uint8_t *b,uint16_t n,uint32_t t) {
 }
 void IIC_Init(I2CInfo *i,GPIO_TypeDef *sd,uint16_t sdp,GPIO_TypeDef *sc,uint16_t scp) {
  assert(sd==I2C_SDA_GPIO_Port&&sdp==I2C_SDA_Pin&&sc==I2C_SCL_GPIO_Port&&scp==I2C_SCL_Pin);
- i->portSda=sd;i->portScl=sc;i->pinSda=sdp;i->pinScl=scp;
+ i->portSda=sd;i->portScl=sc;i->pinSda=sdp;i->pinScl=scp;i->error=0;
 }
 void IIC_DeInit(I2CInfo *i) {(void)i;}
 uint8_t I2C_WriteNByte(I2CInfo *i,const uint8_t *b,uint32_t n) {
@@ -137,7 +137,7 @@ int main(void){
  reset();AllTestFor183(out,120);assert(last_power_on_mv==3300&&power_on==1&&power_off==1&&voltage==0);assert(out[2]==0xAA&&out[3]==8&&out[10]==42&&out[90]==1&&out[100]==1);assert(tx_pin==UART_TX_Pin&&rx_pin==UART_RX_Pin);
  reset();AllTestFor2200(out,120);assert(last_power_on_mv==3300&&power_on==1&&power_off==1&&out[0]==0x56&&out[4]==1&&out[8]==1&&out[22]==1&&out[73]==0x56);
  reset();ADS1220.config[0]=0x39;AllTestFor100S(out,120);assert(last_power_on_mv==5000&&power_on==1&&power_off==1&&ADS1220.config[0]==0x39&&out[0]==0x56&&out[12]==0x56);
- reset();WF3050FtData(out,120);assert(last_power_on_mv==3300&&out[0]==0&&out[1]==0x44&&out[6]==0&&out[7]==0x33&&voltage==0&&last_gpio_mode==GPIO_MODE_ANALOG);
+ reset();WF3050FtData(out,120);assert(last_power_on_mv==3300&&out[0]==0&&out[1]==0x44&&out[6]==0&&out[7]==1&&voltage==0&&last_gpio_mode==GPIO_MODE_ANALOG);
  reset();nack=1;uint16_t sleep[]={2,0,4,100,0,0,0x55,4,2,0xC9};ParseSerialCmd(sleep,10,out,10);assert(out[0]==0&&out[1]==0);
  reset();nack=1;uint16_t noresponse[]={2,0,4,100,8,20,0x55,4,0x24,0x37};ParseSerialCmd(noresponse,10,out,10);assert(out[0]==0&&out[1]==0);
  reset();nack=1;AllTestFor183(out,120);assert(power_off==1&&voltage==0);
@@ -199,7 +199,7 @@ static uint8_t last_data[3];
 void osDelay(uint32_t t){(void)t;}
 void IIC_Init(I2CInfo *i,GPIO_TypeDef *sd,uint16_t sdp,GPIO_TypeDef *sc,uint16_t scp){
  assert(sd==DAC_SDA_GPIO_Port&&sdp==DAC_SDA_Pin&&sc==DAC_SCL_GPIO_Port&&scp==DAC_SCL_Pin);
- i->portSda=sd;i->portScl=sc;i->pinSda=sdp;i->pinScl=scp;
+ i->portSda=sd;i->portScl=sc;i->pinSda=sdp;i->pinScl=scp;i->error=0;
 }
 uint8_t I2C_WriteNByte(I2CInfo *i,const uint8_t *b,uint32_t n){
  (void)i;assert(n==3);for(unsigned j=0;j<n;++j)last_data[j]=b[j];return 0;

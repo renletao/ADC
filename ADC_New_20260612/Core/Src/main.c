@@ -189,11 +189,15 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 void delay_us(uint32_t us)
 {
-  uint16_t delay=0xffff-us-5;				
-  __HAL_TIM_SetCounter(&htim1,delay);		
-  while(delay<0xffff-5)
-  {
-     delay=__HAL_TIM_GetCounter(&htim1); 
+  /* TIM1 is a free-running 16-bit, 1 MHz counter. Accumulate elapsed ticks
+     so wraparound or an interrupt crossing the deadline cannot miss it. */
+  uint16_t previous = (uint16_t)__HAL_TIM_GET_COUNTER(&htim1);
+  while (us) {
+    uint16_t current = (uint16_t)__HAL_TIM_GET_COUNTER(&htim1);
+    uint16_t elapsed = (uint16_t)(current - previous);
+    if (elapsed >= us) break;
+    us -= elapsed;
+    previous = current;
   }
 }
 /* USER CODE END 4 */

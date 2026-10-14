@@ -3,6 +3,8 @@
 
 #include "main.h"
 
+/* Dedicated single-master reference bus. SCL is push-pull: no stretching.
+   SDA is released for slave ACK/data and for the master's final NACK. */
 void pp_iic_init(GPIO_TypeDef *sda_port, uint16_t sda_pin,
                  GPIO_TypeDef *scl_port, uint16_t scl_pin);
 void pp_iic_start(void);

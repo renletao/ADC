@@ -12,12 +12,18 @@
 #define IIC_WRITE 	0
 #define IIC_READ 	1
 
+/* Single-master, external pull-ups; failure status remains 1. */
+#ifndef IIC_SCL_TIMEOUT_US
+#define IIC_SCL_TIMEOUT_US 1000u
+#endif
+
 typedef struct structI2CINFO 
 {
 	GPIO_TypeDef *portSda;
 	GPIO_TypeDef *portScl;
 	uint16_t pinSda;
 	uint16_t pinScl;
+	uint8_t error; /* Latched SCL timeout / stuck bus, cleared by START. */
 } I2CInfo;
 
 extern I2CInfo i2c1;

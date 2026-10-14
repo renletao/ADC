@@ -44,18 +44,12 @@ static uint8_t product_write(I2CInfo *bus, uint8_t command,
         if (err) { iic_stop(bus); return err; }
     }
     iic_stop(bus);
-    return 0;
+    return bus->error;
 }
 
 static uint8_t product_read(I2CInfo *bus, uint8_t *data, uint8_t len)
 {
-    uint8_t i;
-    iic_start(bus);
-    iic_sendbyte(bus, WF2200_I2C_ADDRESS | IIC_READ);
-    if (iic_wait_ack(bus)) { iic_stop(bus); return 1; }
-    for (i = 0; i < len; ++i) data[i] = iic_readbyte(bus, i + 1u < len);
-    iic_stop(bus);
-    return 0;
+    return I2C_ReadNByte(bus, WF2200_I2C_ADDRESS, data, len);
 }
 
 static uint8_t pp_product_write(uint8_t command, const uint8_t *data, uint8_t len)

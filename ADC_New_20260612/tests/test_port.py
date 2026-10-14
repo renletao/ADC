@@ -72,7 +72,7 @@ ADS1220_TypeDef ADS1220;
 OWI_TypeDef OWI_Device;
 I2CInfo i2c1;
 UartInfo uart1;
-static unsigned voltage, power_on, power_off, writes, reads, selected, mismatch, nack;
+static unsigned voltage, last_power_on_mv, power_on, power_off, writes, reads, selected, mismatch, nack;
 static unsigned tx_pin, rx_pin, uart_receives, flash_words;
 static uint32_t last_gpio_mode;
 void HAL_GPIO_WritePin(GPIO_TypeDef *p,uint16_t pin,GPIO_PinState s) {(void)p;(void)pin;(void)s;}
@@ -80,7 +80,7 @@ GPIO_PinState HAL_GPIO_ReadPin(GPIO_TypeDef *p,uint16_t pin) {(void)p;(void)pin;
 void HAL_GPIO_Init(GPIO_TypeDef *p,GPIO_InitTypeDef *i) {(void)p;last_gpio_mode=i->Mode;}
 void osDelay(uint32_t n) {(void)n;}
 void delay_us(uint32_t n) {(void)n;}
-void MCP4725_WriteData_Voltage(uint16_t mv) {voltage=mv;if(mv)++power_on;else ++power_off;}
+void MCP4725_WriteData_Voltage(uint16_t mv) {voltage=mv;if(mv){last_power_on_mv=mv;++power_on;}else ++power_off;}
 void ADS1220_Init(ADS1220_TypeDef *a) {a->state=1;}
 uint32_t GET_ADS1220_Val(ADS1220_TypeDef *a) {(void)a;return 0x123456;}
 void ADS1220_WriteRegister(uint32_t a,uint32_t n,uint8_t *p) {(void)a;(void)n;(void)p;}
@@ -118,7 +118,7 @@ void pp_iic_stop(void){}
 void pp_iic_sendbyte(uint8_t b){(void)b;}
 uint8_t pp_iic_wait_ack(void){return nack;}
 uint8_t pp_iic_readbyte(uint8_t a){(void)a;return 0x44;}
-static void reset(void){writes=reads=selected=mismatch=nack=power_on=power_off=0;IsTaskDone=0;}
+static void reset(void){writes=reads=selected=mismatch=nack=power_on=power_off=0;last_power_on_mv=0;IsTaskDone=0;}
 int main(void){
  uint16_t out[122], c[70]={0};
  reset();c[0]=1;c[1]=TYPE1_SET_VDD;c[2]=0x88;c[3]=0x13;Parse(c,4,out,120);assert(voltage==5000);
@@ -134,10 +134,10 @@ int main(void){
  reset();nack=1;WF280CheckOtpReg(out,120);assert(out[0]==0xFF&&out[1]==1);
  reset();out[0]=0xABCD;WF280CheckOtpReg(out,1);assert(out[0]==0xABCD&&writes==0);
  /* All product paths preserve existing result offsets and power down. */
- reset();AllTestFor183(out,120);assert(power_on==1&&power_off==1&&voltage==0);assert(out[2]==0xAA&&out[3]==8&&out[10]==42&&out[90]==1&&out[100]==1);assert(tx_pin==UART_TX_Pin&&rx_pin==UART_RX_Pin);
- reset();AllTestFor2200(out,120);assert(power_on==1&&power_off==1&&out[0]==0x56&&out[4]==1&&out[8]==1&&out[22]==1&&out[73]==0x56);
- reset();ADS1220.config[0]=0x39;AllTestFor100S(out,120);assert(power_on==1&&power_off==1&&ADS1220.config[0]==0x39&&out[0]==0x56&&out[12]==0x56);
- reset();WF3050FtData(out,120);assert(out[0]==0&&out[1]==0x44&&out[6]==0&&out[7]==0x33&&voltage==0&&last_gpio_mode==GPIO_MODE_ANALOG);
+ reset();AllTestFor183(out,120);assert(last_power_on_mv==3300&&power_on==1&&power_off==1&&voltage==0);assert(out[2]==0xAA&&out[3]==8&&out[10]==42&&out[90]==1&&out[100]==1);assert(tx_pin==UART_TX_Pin&&rx_pin==UART_RX_Pin);
+ reset();AllTestFor2200(out,120);assert(last_power_on_mv==3300&&power_on==1&&power_off==1&&out[0]==0x56&&out[4]==1&&out[8]==1&&out[22]==1&&out[73]==0x56);
+ reset();ADS1220.config[0]=0x39;AllTestFor100S(out,120);assert(last_power_on_mv==5000&&power_on==1&&power_off==1&&ADS1220.config[0]==0x39&&out[0]==0x56&&out[12]==0x56);
+ reset();WF3050FtData(out,120);assert(last_power_on_mv==3300&&out[0]==0&&out[1]==0x44&&out[6]==0&&out[7]==0x33&&voltage==0&&last_gpio_mode==GPIO_MODE_ANALOG);
  reset();nack=1;uint16_t sleep[]={2,0,4,100,0,0,0x55,4,2,0xC9};ParseSerialCmd(sleep,10,out,10);assert(out[0]==0&&out[1]==0);
  reset();nack=1;uint16_t noresponse[]={2,0,4,100,8,20,0x55,4,0x24,0x37};ParseSerialCmd(noresponse,10,out,10);assert(out[0]==0&&out[1]==0);
  reset();nack=1;AllTestFor183(out,120);assert(power_off==1&&voltage==0);
@@ -146,7 +146,7 @@ int main(void){
   c[0]=1;c[1]=TYPE1_GET_TASK_STATUS;Parse(c,2,out,120);assert(out[0]==1);
   c[1]=TYPE1_SET_VDD;Parse(c,4,out,120);assert(out[0]==CMD_ERROR_BUSY&&power_on==0);
   c[1]=TYPE1_GET_ALLTEST_DATA;Parse(c,2,out,120);assert(out[0]==CMD_ERROR_BUSY);
-  RunPendingProductTest();assert(IsTaskDone==0&&power_off==1);Parse(c,2,out,120);assert(!memcmp(out,sendBufBy,240));
+  RunPendingProductTest();assert(IsTaskDone==0&&power_off==1&&last_power_on_mv==(type==9?5000:3300));Parse(c,2,out,120);assert(!memcmp(out,sendBufBy,240));
  }
  /* Guard caller buffers and malformed command lengths. */
  reset();for(unsigned i=0;i<122;++i)out[i]=0xCAFE;
@@ -189,6 +189,29 @@ int main(void){
 }
 '''
 
+DAC_HARNESS = r'''
+#include <assert.h>
+#include <stdio.h>
+#include "MCP4725.h"
+#include "SoftIIC.h"
+GPIO_TypeDef fake_a, fake_b, fake_c;
+static uint8_t last_data[3];
+void osDelay(uint32_t t){(void)t;}
+void IIC_Init(I2CInfo *i,GPIO_TypeDef *sd,uint16_t sdp,GPIO_TypeDef *sc,uint16_t scp){
+ assert(sd==DAC_SDA_GPIO_Port&&sdp==DAC_SDA_Pin&&sc==DAC_SCL_GPIO_Port&&scp==DAC_SCL_Pin);
+ i->portSda=sd;i->portScl=sc;i->pinSda=sdp;i->pinScl=scp;
+}
+uint8_t I2C_WriteNByte(I2CInfo *i,const uint8_t *b,uint32_t n){
+ (void)i;assert(n==3);for(unsigned j=0;j<n;++j)last_data[j]=b[j];return 0;
+}
+int main(void){
+ MCP4725_Init();assert(last_data[0]==0xC0&&last_data[1]==0x08&&last_data[2]==0x00);
+ MCP4725_WriteData_Voltage(5000);assert(last_data[1]==0x0C&&last_data[2]==0x1F);
+ MCP4725_WriteData_Voltage(0);assert(last_data[1]==0&&last_data[2]==0);
+ puts("PASS: actual DAC defaults to 3.3 V, selects 5 V, and powers down");return 0;
+}
+'''
+
 def run():
     with tempfile.TemporaryDirectory(prefix="adc-port-test-") as tmp:
         tmp = Path(tmp)
@@ -197,6 +220,7 @@ def run():
         for name, harness, sources in [
             ("products", HARNESS, ["CmdHelper", "I2CHelper", "wf280", "wf183", "wf2200", "wf100s"]),
             ("drivers", DRIVER_HARNESS, ["SoftIIC", "SoftIIC_PP", "SoftUart"]),
+            ("dac", DAC_HARNESS, ["MCP4725"]),
         ]:
             test = tmp / f"{name}.c"
             test.write_text(harness)

@@ -34,7 +34,7 @@ void MCP4725_Init(void)
 {
 	IIC_Init(&dac_i2c,DAC_SDA_GPIO_Port, DAC_SDA_Pin, DAC_SCL_GPIO_Port, DAC_SCL_Pin);
 	osDelay(10);
-	MCP4725_WriteData_Voltage(5000);
+	MCP4725_WriteData_Voltage(3300); /* Default supply for 3.3 V products. */
 }
 
 void MCP4725_WriteData_Voltage(uint16_t Vout)   //µÁ—πµ•ŒªmV

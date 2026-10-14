@@ -23,7 +23,9 @@
 | WF3050 参考传感器 | 推挽 I2C，SDA=`PB7`、SCL=`PB6`；测试结束释放为模拟输入，后续 UART 会重新初始化 |
 | VPP | 保留新版 `PB3/VPP_EN` 及 `0x202` 命令 |
 
-产品测试默认请求 **5000 mV**，与新版 `MCP4725_Init()` 默认值一致；统一配置为 `CmdHelper.h` 的 `PRODUCT_TEST_VDD_MV`。关电请求为 **0 mV**。旧版 `{0x201, 0xFF}` 开关命令已经转换为新版 `{0x201, 电压低字节, 电压高字节}`，例如 5000 mV 为 `{1, 0x201, 0x88, 0x13}`。
+**WF100S 的模拟供电请求 5000 mV，其他型号使用 3300 mV。** `CmdHelper.h` 的 `WF100S_TEST_VDD_MV` 用于 WF100S，`PRODUCT_TEST_VDD_MV` 用于 WF183、WF2200 和 WF3050。`MCP4725_Init()` 默认请求 3300 mV，WF280 按主机设置的 VDD 校验，使用时设置 3300 mV。关电请求为 **0 mV**。UART/I2C 的 GPIO 配置继续使用新板接口；5 V 指 WF100S 的模拟供电。
+
+旧版 `{0x201, 0xFF}` 开关命令已经转换为新版 `{0x201, 电压低字节, 电压高字节}`：3300 mV 为 `{1, 0x201, 0xE4, 0x0C}`，5000 mV 为 `{1, 0x201, 0x88, 0x13}`。
 
 产品内部 I2C 向量使用新版格式：`{3, reserved, send_len, reserved, recv_len, reserved, address, payload...}`。`send_len` 包含地址字节，地址使用原来的 8 位总线地址（`0xDA`、`0x70`）。`ProductI2CTransfer()` 使用新版底层驱动，并保留产品结果中“数据从偏移 0 开始，紧随其后为状态”的布局；单独读取不会额外发送地址写事务。对外通用 I2C 命令仍先写后读，`out[0]` 为写状态、`out[1]` 为读状态、数据从 `out[2]` 开始，0 表示成功、1 表示 NACK。
 

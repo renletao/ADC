@@ -23,9 +23,12 @@
 #define TYPE1_GET_ALLTEST_DATA 0x401
 #define TYPE1_WF3050_FT_DATA 0x567
 
-/* Same default voltage as MCP4725_Init(); override for the actual product. */
+/* WF183/WF2200/WF3050 use 3.3 V; WF100S analog supply uses 5 V. */
 #ifndef PRODUCT_TEST_VDD_MV
-#define PRODUCT_TEST_VDD_MV 5000u
+#define PRODUCT_TEST_VDD_MV 3300u
+#endif
+#ifndef WF100S_TEST_VDD_MV
+#define WF100S_TEST_VDD_MV 5000u
 #endif
 #define WF183DE 0u
 #define WF2200 1u

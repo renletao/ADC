@@ -73,23 +73,63 @@ void ADS1220_WriteRegister(uint32_t StartAddress, uint32_t NumRegs, uint8_t * pD
 	}
 }
 
+static uint8_t ADS1220_WaitForReady(void)
+{
+	uint32_t elapsed = 0;
+
+	/* ADS1220 DRDY is low when a new conversion result is ready. */
+	while (HAL_GPIO_ReadPin(INT_GPIO_Port, INT_Pin) == GPIO_PIN_SET)
+	{
+		if (elapsed++ >= ADS1220_DRDY_TIMEOUT_US) return 0;
+		delay_us(1);
+	}
+	return 1;
+}
+
+static uint8_t ADS1220_ReadDataFrame(uint32_t *value)
+{
+	uint8_t tx[4] = { ADS1220_RDATA, 0, 0, 0 };
+	uint8_t rx[4] = { 0, 0, 0, 0 };
+
+	if (HAL_SPI_TransmitReceive(&hspi1, tx, rx, 4, 1000) != HAL_OK) return 0;
+	*value = ((uint32_t)rx[1] << 16) |
+	         ((uint32_t)rx[2] << 8) |
+	         (uint32_t)rx[3];
+	if (*value & 0x800000u) *value |= 0xff000000u;
+	return 1;
+}
+
 uint32_t GET_ADS1220_Val(ADS1220_TypeDef *ads1220)
 {
-	uint32_t Count = 0;
-	ADS1220_Write(ADS1220_START);
-	while(!HAL_GPIO_ReadPin(INT_GPIO_Port,INT_Pin))
+	uint32_t value;
+
+	if (ads1220 == 0) return 0;
+
+	/* A low DRDY before START means an older result is still pending. Read
+	   and discard it so START cannot be followed by an immediate stale read. */
+	if (HAL_GPIO_ReadPin(INT_GPIO_Port, INT_Pin) == GPIO_PIN_RESET)
 	{
-		Count++;
-		delay_us(1);
-		if(Count >=0x3FFFF)return 0;
+		if (!ADS1220_ReadDataFrame(&value))
+		{
+			ads1220->Data = 0;
+			return 0;
+		}
 	}
-	ads1220->Data = 0;
-	ADS1220_Write(ADS1220_RDATA);
-	ads1220->Data = ADS1220ReceiveByte();
-	ads1220->Data = (ads1220->Data << 8) | ADS1220ReceiveByte();
-	ads1220->Data = (ads1220->Data << 8) | ADS1220ReceiveByte();
-	if (ads1220->Data & 0x800000)ads1220->Data |= 0xff000000;
-	return  ads1220->Data;
+
+	ADS1220_Write(ADS1220_START);
+	if (!ADS1220_WaitForReady())
+	{
+		ads1220->Data = 0;
+		return 0;
+	}
+
+	if (!ADS1220_ReadDataFrame(&value))
+	{
+		ads1220->Data = 0;
+		return 0;
+	}
+	ads1220->Data = value;
+	return value;
 }
 /* USER CODE BEGIN 2 */
 

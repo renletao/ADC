@@ -11,6 +11,10 @@ static const uint16_t sys_vdd_off_183[] = { 1, TYPE1_SET_VDD, 0, 0 };
 static const uint16_t sys_vdd_on_183[] = { 1, TYPE1_SET_VDD, (PRODUCT_TEST_VDD_MV & 0xFFu), (PRODUCT_TEST_VDD_MV >> 8) };
 static int32_t ADC_Value_183 = 0;
 
+/* WF183 changes its power state asynchronously after the sleep command. */
+#define WF183_SLEEP_SETTLE_MS  20u
+#define WF183_WORK_SETTLE_MS  100u
+
 /************WF183DE****************/
  static const uint16_t uart_id[] = { 0, 0, 4, 100, 8, 20, 0x55, 0x04, 0x24, 0x37 };
  static const uint16_t uart_version[] = { 0, 0, 4, 20, 8, 100, 0x66, 0x04, 0x1D, 0x2F };
@@ -35,7 +39,6 @@ void AllTestFor183(uint16_t *out, uint16_t out_lens){
   memset(out, 0, out_lens * sizeof(*out));
 
     uint16_t _out[10] = {0};
-    int32_t adc2;
     uint8_t i;
     volatile float curr;
     //oppen power
@@ -56,10 +59,10 @@ void AllTestFor183(uint16_t *out, uint16_t out_lens){
         {
             //sleep         ParseSerialCmd
             ParseSerialCmd(uart_sleep02, sizeof(uart_sleep02) / sizeof(uart_sleep02[0]), _out, 10);
+            osDelay(WF183_SLEEP_SETTLE_MS);
             //sleep current     ParseSystemCmd
-            ADC_Value_183 = GET_ADS1220_Val(&ADS1220);
-            adc2 = GET_ADS1220_Val(&ADS1220);
-            if(adc2<ADC_Value_183) ADC_Value_183 = adc2;
+            (void)GET_ADS1220_Val(&ADS1220); /* discard the first sample after the state change */
+            ADC_Value_183 = (int32_t)GET_ADS1220_Val(&ADS1220);
             out[114] = (uint8_t)(ADC_Value_183);
             out[115] = (uint8_t)(ADC_Value_183>>8);
             out[116] = (uint8_t)(ADC_Value_183>>16);
@@ -121,6 +124,10 @@ void AllTestFor183(uint16_t *out, uint16_t out_lens){
 
         {
             //work current  ParseSystemCmd
+            /* The preceding UART/I2C/OWI transactions wake the sensor.  Give
+               its supply/current path time to reach the working state before
+               sampling the final current. */
+            osDelay(WF183_WORK_SETTLE_MS);
             ParseSystemCmd(sys_adc_183, 2, _out, 4);
             CopyAndClear(_out, &out[110], 4);
         }

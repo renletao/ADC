@@ -73,7 +73,7 @@ OWI_TypeDef OWI_Device;
 I2CInfo i2c1;
 UartInfo uart1;
 static unsigned voltage, last_power_on_mv, power_on, power_off, writes, reads, selected, mismatch, nack;
-static unsigned tx_pin, rx_pin, uart_receives, flash_words;
+static unsigned tx_pin, rx_pin, uart_receives, uart_fail_once, flash_words;
 static uint32_t last_gpio_mode;
 void HAL_GPIO_WritePin(GPIO_TypeDef *p,uint16_t pin,GPIO_PinState s) {(void)p;(void)pin;(void)s;}
 GPIO_PinState HAL_GPIO_ReadPin(GPIO_TypeDef *p,uint16_t pin) {(void)p;(void)pin;return GPIO_PIN_RESET;}
@@ -92,7 +92,7 @@ void UART_Init(UartInfo *u,uint32_t b,GPIO_TypeDef *tp,uint16_t t,GPIO_TypeDef *
 void UART_DeInit(UartInfo *u) {(void)u;}
 void Soft_Uart_Send(UartInfo *u,uint8_t *b,uint16_t n,uint32_t t) {(void)u;(void)b;(void)n;(void)t;}
 void Soft_Uart_Recv(UartInfo *u,uint8_t *b,uint16_t n,uint32_t t) {
- (void)t;++uart_receives;if(nack)return;u->Save_BuadRate=104.f;memset(b,0,n);if(n>=2){b[0]=0xAA;b[1]=8;}
+ (void)t;++uart_receives;if(nack||uart_fail_once){uart_fail_once=0;return;}u->Save_BuadRate=104.f;memset(b,0,n);if(n>=2){b[0]=0xAA;b[1]=8;}
 }
 void IIC_Init(I2CInfo *i,GPIO_TypeDef *sd,uint16_t sdp,GPIO_TypeDef *sc,uint16_t scp) {
  assert(sd==I2C_SDA_GPIO_Port&&sdp==I2C_SDA_Pin&&sc==I2C_SCL_GPIO_Port&&scp==I2C_SCL_Pin);
@@ -118,13 +118,16 @@ void pp_iic_stop(void){}
 void pp_iic_sendbyte(uint8_t b){(void)b;}
 uint8_t pp_iic_wait_ack(void){return nack;}
 uint8_t pp_iic_readbyte(uint8_t a){(void)a;return 0x44;}
-static void reset(void){writes=reads=selected=mismatch=nack=power_on=power_off=0;last_power_on_mv=0;IsTaskDone=0;}
+static void reset(void){writes=reads=selected=mismatch=nack=power_on=power_off=uart_receives=0;uart_fail_once=0;last_power_on_mv=0;IsTaskDone=0;}
 int main(void){
  uint16_t out[122], c[70]={0};
  reset();c[0]=1;c[1]=TYPE1_SET_VDD;c[2]=0x88;c[3]=0x13;Parse(c,4,out,120);assert(voltage==5000);
  c[1]=TYPE1_SAVE_ADC;c[2]=1;c[3]=2;c[4]=3;c[5]=4;Parse(c,6,out,120);assert(flash_words==2);
  /* Generic latest-format I2C keeps status at 0/1 and data at 2. */
  uint16_t combined[]={3,0,2,0,4,0,0xDA,0x06};Parse(combined,8,out,120);assert(writes==1&&reads==1&&out[0]==0&&out[1]==0&&out[2]==1&&out[5]==4);
+ /* The original WF host format remains accepted by the latest parser. */
+ reset();uint16_t legacy_write[]={3,0,0x11,0xDA,0,2,0x0A,0x04};ParseI2CCmd(legacy_write,8,out,10);assert(writes==1&&out[0]==0);
+ reset();uint16_t legacy_read[]={3,0,0x22,0xDA,0,3};ParseI2CCmd(legacy_read,6,out,10);assert(reads==1&&out[0]==1&&out[1]==2&&out[2]==3&&out[3]==0);
  c[0]=3;c[2]=65;Parse(c,70,out,120);assert(out[0]==CMD_ERROR_LENGTH);
  /* Product reads do not inject an extra address-only write. */
  reset();uint16_t readcmd[]={3,0,1,0,3,0,0xDA};assert(ProductI2CTransfer(readcmd,7,out,10)==0);assert(writes==0&&reads==1&&out[0]==1&&out[2]==3&&out[3]==0);
@@ -141,6 +144,7 @@ int main(void){
  reset();nack=1;uint16_t sleep[]={2,0,4,100,0,0,0x55,4,2,0xC9};ParseSerialCmd(sleep,10,out,10);assert(out[0]==0&&out[1]==0);
  reset();nack=1;uint16_t noresponse[]={2,0,4,100,8,20,0x55,4,0x24,0x37};ParseSerialCmd(noresponse,10,out,10);assert(out[0]==0&&out[1]==0);
  reset();nack=1;AllTestFor183(out,120);assert(power_off==1&&voltage==0);
+ reset();uart_fail_once=1;uint16_t serial_retry[]={2,0,4,100,2,20,0x55,4,0x24,0x37};ParseSerialCmd(serial_retry,10,out,10);assert(uart_receives==2&&out[2]==0xAA&&out[3]==8);
  /* Queued requests, busy protection, completion and saved results. */
  for(unsigned type=8;type<=10;++type){reset();c[0]=type;Parse(c,1,out,120);assert(IsTaskDone==1&&out[0]==1);
   c[0]=1;c[1]=TYPE1_GET_TASK_STATUS;Parse(c,2,out,120);assert(out[0]==1);

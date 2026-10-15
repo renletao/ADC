@@ -160,7 +160,20 @@ void ParseSerialCmd(const uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16
     UART_Init(&uart1, 9600, UART_TX_GPIO_Port, UART_TX_Pin, UART_RX_GPIO_Port, UART_RX_Pin);
     osDelay(10);
     Soft_Uart_Send(&uart1, SendBuff, sendLens, cmd[3]);
-    if (recvLens) Soft_Uart_Recv(&uart1, RecvBuff, recvLens, cmd[5]);
+    if (recvLens) {
+        Soft_Uart_Recv(&uart1, RecvBuff, recvLens, cmd[5]);
+        /* Switching from I2C or a previous UART transaction can leave the
+           first start bit missed. Re-arm the pins and retry one no-response
+           transaction; a valid response is never sent twice. */
+        if (uart1.Save_BuadRate == 0.0f) {
+            UART_DeInit(&uart1);
+            UART_Init(&uart1, 9600, UART_TX_GPIO_Port, UART_TX_Pin,
+                      UART_RX_GPIO_Port, UART_RX_Pin);
+            osDelay(2);
+            Soft_Uart_Send(&uart1, SendBuff, sendLens, cmd[3]);
+            Soft_Uart_Recv(&uart1, RecvBuff, recvLens, cmd[5]);
+        }
+    }
     if (uart1.Save_BuadRate > 0) baud = (uint16_t)(1000000.0f / uart1.Save_BuadRate);
     out[0] = (uint8_t)(baud >> 8); out[1] = (uint8_t)baud;
     for (i = 0; i < recvLens; ++i) out[i + 2u] = RecvBuff[i];
@@ -172,7 +185,36 @@ void ParseI2CCmd(const uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t 
     uint16_t sendLens, recvLens, i;
     uint8_t SendBuff[DATA_LENTH] = {0};
     uint8_t RecvBuff[DATA_LENTH] = {0};
+    uint8_t legacy_data[DATA_LENTH + 1u];
     if (!cmd || !out || !out_lens) return;
+
+    /* Keep the original host protocol accepted by the WF test software:
+       {3, channel, 0x11/0x22, address, reserved, length, payload...}.
+       The current protocol below uses explicit send/receive lengths. */
+    if (cmd_lens >= 6u && (cmd[2] == 0x11u || cmd[2] == 0x22u)) {
+        uint16_t length = cmd[5];
+        uint8_t err;
+        if (length > DATA_LENTH ||
+            (cmd[2] == 0x22u && out_lens <= length) ||
+            (cmd[2] == 0x11u && cmd_lens < 6u + length)) {
+            out[0] = CMD_ERROR_LENGTH;
+            return;
+        }
+        IIC_Init(&i2c1, I2C_SDA_GPIO_Port, I2C_SDA_Pin,
+                 I2C_SCL_GPIO_Port, I2C_SCL_Pin);
+        if (cmd[2] == 0x11u) {
+            legacy_data[0] = (uint8_t)(cmd[3] & 0xFEu);
+            for (i = 0; i < length; ++i) legacy_data[i + 1u] = (uint8_t)cmd[i + 6u];
+            err = I2C_WriteNByte(&i2c1, legacy_data, length + 1u);
+            out[0] = err;
+        } else {
+            err = I2C_ReadNByte(&i2c1, (uint8_t)cmd[3], legacy_data, length);
+            for (i = 0; i < length; ++i) out[i] = legacy_data[i];
+            out[length] = err;
+        }
+        IIC_DeInit(&i2c1);
+        return;
+    }
     if (cmd_lens < 7u) { out[0] = CMD_ERROR_LENGTH; return; }
     sendLens = cmd[2]; recvLens = cmd[4];
     if (!sendLens || sendLens > DATA_LENTH || recvLens > DATA_LENTH ||

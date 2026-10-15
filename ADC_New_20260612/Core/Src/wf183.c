@@ -59,7 +59,7 @@ void AllTestFor183(uint16_t *out, uint16_t out_lens){
             //sleep current     ParseSystemCmd
             ADC_Value_183 = GET_ADS1220_Val(&ADS1220);
             adc2 = GET_ADS1220_Val(&ADS1220);
-            if(adc2>ADC_Value_183) ADC_Value_183 = adc2;
+            if(adc2<ADC_Value_183) ADC_Value_183 = adc2;
             out[114] = (uint8_t)(ADC_Value_183);
             out[115] = (uint8_t)(ADC_Value_183>>8);
             out[116] = (uint8_t)(ADC_Value_183>>16);

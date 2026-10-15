@@ -1,7 +1,7 @@
 adc\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM0/port.c
 adc\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
-adc\port.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stddef.h
-adc\port.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stdint.h
+adc\port.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stddef.h
+adc\port.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stdint.h
 adc\port.o: ../Core/Inc/FreeRTOSConfig.h
 adc\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
 adc\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h

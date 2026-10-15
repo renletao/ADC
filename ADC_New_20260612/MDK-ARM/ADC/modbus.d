@@ -1,7 +1,7 @@
 adc\modbus.o: ..\Middlewares\Third_Party\FreeModbus\Modbus.c
 adc\modbus.o: ../Middlewares/Third_Party/FreeModbus/include/mb.h
 adc\modbus.o: ../Middlewares/Third_Party/FreeModbus/port/port.h
-adc\modbus.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\assert.h
+adc\modbus.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\assert.h
 adc\modbus.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal.h
 adc\modbus.o: ../Core/Inc/stm32g0xx_hal_conf.h
 adc\modbus.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_rcc.h
@@ -9,7 +9,7 @@ adc\modbus.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_def.h
 adc\modbus.o: ../Drivers/CMSIS/Device/ST/STM32G0xx/Include/stm32g0xx.h
 adc\modbus.o: ../Drivers/CMSIS/Device/ST/STM32G0xx/Include/stm32g031xx.h
 adc\modbus.o: ../Drivers/CMSIS/Include/core_cm0plus.h
-adc\modbus.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stdint.h
+adc\modbus.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stdint.h
 adc\modbus.o: ../Drivers/CMSIS/Include/cmsis_version.h
 adc\modbus.o: ../Drivers/CMSIS/Include/cmsis_compiler.h
 adc\modbus.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
@@ -17,7 +17,7 @@ adc\modbus.o: ../Drivers/CMSIS/Include/mpu_armv7.h
 adc\modbus.o: ../Drivers/CMSIS/Device/ST/STM32G0xx/Include/system_stm32g0xx.h
 adc\modbus.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal.h
 adc\modbus.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
-adc\modbus.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stddef.h
+adc\modbus.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stddef.h
 adc\modbus.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_ll_rcc.h
 adc\modbus.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_rcc_ex.h
 adc\modbus.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_gpio.h
@@ -44,6 +44,6 @@ adc\modbus.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_uart.h
 adc\modbus.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_uart_ex.h
 adc\modbus.o: ../Middlewares/Third_Party/FreeModbus/include/mbport.h
 adc\modbus.o: ../Middlewares/Third_Party/FreeModbus/include/mbproto.h
-adc\modbus.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\string.h
+adc\modbus.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\string.h
 adc\modbus.o: ../Middlewares/Third_Party/FreeModbus/include/mbutils.h
 adc\modbus.o: ../Core/Inc/CmdHelper.h

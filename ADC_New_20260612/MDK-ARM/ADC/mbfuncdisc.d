@@ -1,8 +1,8 @@
 adc\mbfuncdisc.o: ..\Middlewares\Third_Party\FreeModbus\functions\mbfuncdisc.c
-adc\mbfuncdisc.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stdlib.h
-adc\mbfuncdisc.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\string.h
+adc\mbfuncdisc.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stdlib.h
+adc\mbfuncdisc.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\string.h
 adc\mbfuncdisc.o: ../Middlewares/Third_Party/FreeModbus/port/port.h
-adc\mbfuncdisc.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\assert.h
+adc\mbfuncdisc.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\assert.h
 adc\mbfuncdisc.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal.h
 adc\mbfuncdisc.o: ../Core/Inc/stm32g0xx_hal_conf.h
 adc\mbfuncdisc.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_rcc.h
@@ -10,7 +10,7 @@ adc\mbfuncdisc.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_def.h
 adc\mbfuncdisc.o: ../Drivers/CMSIS/Device/ST/STM32G0xx/Include/stm32g0xx.h
 adc\mbfuncdisc.o: ../Drivers/CMSIS/Device/ST/STM32G0xx/Include/stm32g031xx.h
 adc\mbfuncdisc.o: ../Drivers/CMSIS/Include/core_cm0plus.h
-adc\mbfuncdisc.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stdint.h
+adc\mbfuncdisc.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stdint.h
 adc\mbfuncdisc.o: ../Drivers/CMSIS/Include/cmsis_version.h
 adc\mbfuncdisc.o: ../Drivers/CMSIS/Include/cmsis_compiler.h
 adc\mbfuncdisc.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
@@ -18,7 +18,7 @@ adc\mbfuncdisc.o: ../Drivers/CMSIS/Include/mpu_armv7.h
 adc\mbfuncdisc.o: ../Drivers/CMSIS/Device/ST/STM32G0xx/Include/system_stm32g0xx.h
 adc\mbfuncdisc.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal.h
 adc\mbfuncdisc.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
-adc\mbfuncdisc.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stddef.h
+adc\mbfuncdisc.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stddef.h
 adc\mbfuncdisc.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_ll_rcc.h
 adc\mbfuncdisc.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_rcc_ex.h
 adc\mbfuncdisc.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_gpio.h

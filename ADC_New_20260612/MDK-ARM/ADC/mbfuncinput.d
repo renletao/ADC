@@ -1,8 +1,8 @@
 adc\mbfuncinput.o: ..\Middlewares\Third_Party\FreeModbus\functions\mbfuncinput.c
-adc\mbfuncinput.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stdlib.h
-adc\mbfuncinput.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\string.h
+adc\mbfuncinput.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stdlib.h
+adc\mbfuncinput.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\string.h
 adc\mbfuncinput.o: ../Middlewares/Third_Party/FreeModbus/port/port.h
-adc\mbfuncinput.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\assert.h
+adc\mbfuncinput.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\assert.h
 adc\mbfuncinput.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal.h
 adc\mbfuncinput.o: ../Core/Inc/stm32g0xx_hal_conf.h
 adc\mbfuncinput.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_rcc.h
@@ -10,7 +10,7 @@ adc\mbfuncinput.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_def.h
 adc\mbfuncinput.o: ../Drivers/CMSIS/Device/ST/STM32G0xx/Include/stm32g0xx.h
 adc\mbfuncinput.o: ../Drivers/CMSIS/Device/ST/STM32G0xx/Include/stm32g031xx.h
 adc\mbfuncinput.o: ../Drivers/CMSIS/Include/core_cm0plus.h
-adc\mbfuncinput.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stdint.h
+adc\mbfuncinput.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stdint.h
 adc\mbfuncinput.o: ../Drivers/CMSIS/Include/cmsis_version.h
 adc\mbfuncinput.o: ../Drivers/CMSIS/Include/cmsis_compiler.h
 adc\mbfuncinput.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
@@ -18,7 +18,7 @@ adc\mbfuncinput.o: ../Drivers/CMSIS/Include/mpu_armv7.h
 adc\mbfuncinput.o: ../Drivers/CMSIS/Device/ST/STM32G0xx/Include/system_stm32g0xx.h
 adc\mbfuncinput.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal.h
 adc\mbfuncinput.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
-adc\mbfuncinput.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stddef.h
+adc\mbfuncinput.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stddef.h
 adc\mbfuncinput.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_ll_rcc.h
 adc\mbfuncinput.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_rcc_ex.h
 adc\mbfuncinput.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_gpio.h

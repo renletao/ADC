@@ -1,6 +1,6 @@
 adc\portserial.o: ..\Middlewares\Third_Party\FreeModbus\port\portserial.c
 adc\portserial.o: ..\Middlewares\Third_Party\FreeModbus\port\port.h
-adc\portserial.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\assert.h
+adc\portserial.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\assert.h
 adc\portserial.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal.h
 adc\portserial.o: ../Core/Inc/stm32g0xx_hal_conf.h
 adc\portserial.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_rcc.h
@@ -8,7 +8,7 @@ adc\portserial.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_def.h
 adc\portserial.o: ../Drivers/CMSIS/Device/ST/STM32G0xx/Include/stm32g0xx.h
 adc\portserial.o: ../Drivers/CMSIS/Device/ST/STM32G0xx/Include/stm32g031xx.h
 adc\portserial.o: ../Drivers/CMSIS/Include/core_cm0plus.h
-adc\portserial.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stdint.h
+adc\portserial.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stdint.h
 adc\portserial.o: ../Drivers/CMSIS/Include/cmsis_version.h
 adc\portserial.o: ../Drivers/CMSIS/Include/cmsis_compiler.h
 adc\portserial.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
@@ -16,7 +16,7 @@ adc\portserial.o: ../Drivers/CMSIS/Include/mpu_armv7.h
 adc\portserial.o: ../Drivers/CMSIS/Device/ST/STM32G0xx/Include/system_stm32g0xx.h
 adc\portserial.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal.h
 adc\portserial.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
-adc\portserial.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stddef.h
+adc\portserial.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stddef.h
 adc\portserial.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_ll_rcc.h
 adc\portserial.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_rcc_ex.h
 adc\portserial.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_gpio.h

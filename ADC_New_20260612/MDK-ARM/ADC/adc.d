@@ -8,7 +8,7 @@ adc\adc.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_def.h
 adc\adc.o: ../Drivers/CMSIS/Device/ST/STM32G0xx/Include/stm32g0xx.h
 adc\adc.o: ../Drivers/CMSIS/Device/ST/STM32G0xx/Include/stm32g031xx.h
 adc\adc.o: ../Drivers/CMSIS/Include/core_cm0plus.h
-adc\adc.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stdint.h
+adc\adc.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stdint.h
 adc\adc.o: ../Drivers/CMSIS/Include/cmsis_version.h
 adc\adc.o: ../Drivers/CMSIS/Include/cmsis_compiler.h
 adc\adc.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
@@ -16,7 +16,7 @@ adc\adc.o: ../Drivers/CMSIS/Include/mpu_armv7.h
 adc\adc.o: ../Drivers/CMSIS/Device/ST/STM32G0xx/Include/system_stm32g0xx.h
 adc\adc.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal.h
 adc\adc.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
-adc\adc.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stddef.h
+adc\adc.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stddef.h
 adc\adc.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_ll_rcc.h
 adc\adc.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_rcc_ex.h
 adc\adc.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_gpio.h

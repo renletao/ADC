@@ -1,7 +1,7 @@
 adc\app_freertos.o: ../Core/Src/app_freertos.c
 adc\app_freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
-adc\app_freertos.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stddef.h
-adc\app_freertos.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stdint.h
+adc\app_freertos.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stddef.h
+adc\app_freertos.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stdint.h
 adc\app_freertos.o: ../Core/Inc/FreeRTOSConfig.h
 adc\app_freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
 adc\app_freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h
@@ -55,14 +55,14 @@ adc\app_freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h
 adc\app_freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h
 adc\app_freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/event_groups.h
 adc\app_freertos.o: ../Core/Inc/usart.h
-adc\app_freertos.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stdio.h
+adc\app_freertos.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stdio.h
 adc\app_freertos.o: ../Middlewares/Third_Party/FreeModbus/include/mb.h
 adc\app_freertos.o: ../Middlewares/Third_Party/FreeModbus/port/port.h
-adc\app_freertos.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\assert.h
+adc\app_freertos.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\assert.h
 adc\app_freertos.o: ../Middlewares/Third_Party/FreeModbus/include/mbport.h
 adc\app_freertos.o: ../Middlewares/Third_Party/FreeModbus/include/mbproto.h
 adc\app_freertos.o: ../Middlewares/Third_Party/FreeModbus/include/mbutils.h
-adc\app_freertos.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\string.h
+adc\app_freertos.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\string.h
 adc\app_freertos.o: ../Core/Inc/CmdHelper.h
 adc\app_freertos.o: ../Core/Inc/ADS1220.h
 adc\app_freertos.o: ../Core/Inc/flash.h

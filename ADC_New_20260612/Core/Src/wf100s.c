@@ -16,6 +16,7 @@ void AllTestFor100S(uint16_t *out, uint16_t out_lens){
   memset(out, 0, out_lens * sizeof(*out));
   saved_config = ADS1220.config[0];
 	ParseSystemCmd(supply_on, 4, supply_result, 1);
+	ADS1220_Init(&ADS1220);
   osDelay(150);
 	do
 	{

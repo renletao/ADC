@@ -1,8 +1,8 @@
 adc\list.o: ../Middlewares/Third_Party/FreeRTOS/Source/list.c
-adc\list.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stdlib.h
+adc\list.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stdlib.h
 adc\list.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
-adc\list.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stddef.h
-adc\list.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stdint.h
+adc\list.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stddef.h
+adc\list.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stdint.h
 adc\list.o: ../Core/Inc/FreeRTOSConfig.h
 adc\list.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
 adc\list.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h

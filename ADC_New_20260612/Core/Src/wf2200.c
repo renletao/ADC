@@ -5,6 +5,7 @@
 #include "cmsis_os.h"
 #include "I2CHelper.h"
 #include "SoftIIC_PP.h"
+#include "ADS1220.h"
 
 /************WF2200****************/
   static const uint16_t iic_write_reset[] = { 3, 0, 3, 0, 0, 0, 0xDA, 0x00, 0x24 }; // Latest format: type, reserved, send_len, reserved, recv_len, reserved, address, payload
@@ -29,6 +30,7 @@ void AllTestFor2200(uint16_t *out, uint16_t out_lens){
   uint8_t i;
 	//oppen power
   ParseSystemCmd(sys_vdd_on_2200, 4, _out, 4);
+	ADS1220_Init(&ADS1220);
   IIC_Init(&i2c1, I2C_SDA_GPIO_Port, I2C_SDA_Pin, I2C_SCL_GPIO_Port, I2C_SCL_Pin);
   osDelay(50);
   ProductI2CTransfer(iic_write_reset, sizeof(iic_write_reset) / sizeof(iic_write_reset[0]), _out, sizeof(_out) / sizeof(_out[0]));

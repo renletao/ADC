@@ -1,6 +1,6 @@
 adc\porttimer.o: ..\Middlewares\Third_Party\FreeModbus\port\porttimer.c
 adc\porttimer.o: ..\Middlewares\Third_Party\FreeModbus\port\port.h
-adc\porttimer.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\assert.h
+adc\porttimer.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\assert.h
 adc\porttimer.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal.h
 adc\porttimer.o: ../Core/Inc/stm32g0xx_hal_conf.h
 adc\porttimer.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_rcc.h
@@ -8,7 +8,7 @@ adc\porttimer.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_def.h
 adc\porttimer.o: ../Drivers/CMSIS/Device/ST/STM32G0xx/Include/stm32g0xx.h
 adc\porttimer.o: ../Drivers/CMSIS/Device/ST/STM32G0xx/Include/stm32g031xx.h
 adc\porttimer.o: ../Drivers/CMSIS/Include/core_cm0plus.h
-adc\porttimer.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stdint.h
+adc\porttimer.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stdint.h
 adc\porttimer.o: ../Drivers/CMSIS/Include/cmsis_version.h
 adc\porttimer.o: ../Drivers/CMSIS/Include/cmsis_compiler.h
 adc\porttimer.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
@@ -16,7 +16,7 @@ adc\porttimer.o: ../Drivers/CMSIS/Include/mpu_armv7.h
 adc\porttimer.o: ../Drivers/CMSIS/Device/ST/STM32G0xx/Include/system_stm32g0xx.h
 adc\porttimer.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal.h
 adc\porttimer.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
-adc\porttimer.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stddef.h
+adc\porttimer.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stddef.h
 adc\porttimer.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_ll_rcc.h
 adc\porttimer.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_rcc_ex.h
 adc\porttimer.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_gpio.h

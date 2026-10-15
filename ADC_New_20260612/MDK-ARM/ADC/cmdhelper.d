@@ -1,5 +1,5 @@
 adc\cmdhelper.o: ..\Core\Src\CmdHelper.c
-adc\cmdhelper.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\string.h
+adc\cmdhelper.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\string.h
 adc\cmdhelper.o: ../Core/Inc/main.h
 adc\cmdhelper.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal.h
 adc\cmdhelper.o: ../Core/Inc/stm32g0xx_hal_conf.h
@@ -8,7 +8,7 @@ adc\cmdhelper.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_def.h
 adc\cmdhelper.o: ../Drivers/CMSIS/Device/ST/STM32G0xx/Include/stm32g0xx.h
 adc\cmdhelper.o: ../Drivers/CMSIS/Device/ST/STM32G0xx/Include/stm32g031xx.h
 adc\cmdhelper.o: ../Drivers/CMSIS/Include/core_cm0plus.h
-adc\cmdhelper.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stdint.h
+adc\cmdhelper.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stdint.h
 adc\cmdhelper.o: ../Drivers/CMSIS/Include/cmsis_version.h
 adc\cmdhelper.o: ../Drivers/CMSIS/Include/cmsis_compiler.h
 adc\cmdhelper.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
@@ -16,7 +16,7 @@ adc\cmdhelper.o: ../Drivers/CMSIS/Include/mpu_armv7.h
 adc\cmdhelper.o: ../Drivers/CMSIS/Device/ST/STM32G0xx/Include/system_stm32g0xx.h
 adc\cmdhelper.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal.h
 adc\cmdhelper.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
-adc\cmdhelper.o: D:\Keil_v5\ARM\ARMGCC\Bin\..\include\stddef.h
+adc\cmdhelper.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\stddef.h
 adc\cmdhelper.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_ll_rcc.h
 adc\cmdhelper.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_rcc_ex.h
 adc\cmdhelper.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_gpio.h
@@ -43,7 +43,7 @@ adc\cmdhelper.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_uart.h
 adc\cmdhelper.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_uart_ex.h
 adc\cmdhelper.o: ../Core/Inc/CmdHelper.h
 adc\cmdhelper.o: ../Core/Inc/usart.h
-adc\cmdhelper.o: ../Core/Inc/ads1220.h
+adc\cmdhelper.o: ../Core/Inc/ADS1220.h
 adc\cmdhelper.o: ../Core/Inc/flash.h
 adc\cmdhelper.o: ../Core/Inc/owi.h
 adc\cmdhelper.o: ../Core/Inc/tim.h
@@ -64,3 +64,7 @@ adc\cmdhelper.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/event_groups
 adc\cmdhelper.o: ../Core/Inc/SoftIIC.h
 adc\cmdhelper.o: ../Core/Inc/MCP4725.h
 adc\cmdhelper.o: ../Core/Inc/SoftUart.h
+adc\cmdhelper.o: ../Core/Inc/wf183.h
+adc\cmdhelper.o: ../Core/Inc/wf100s.h
+adc\cmdhelper.o: ../Core/Inc/wf2200.h
+adc\cmdhelper.o: ../Core/Inc/wf280.h

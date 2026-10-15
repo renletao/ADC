@@ -73,11 +73,9 @@ void ADS1220_WriteRegister(uint32_t StartAddress, uint32_t NumRegs, uint8_t * pD
 	}
 }
 
-static uint32_t ADS1220_ReadOnce(ADS1220_TypeDef *ads1220)
+uint32_t GET_ADS1220_Val(ADS1220_TypeDef *ads1220)
 {
 	uint32_t Count = 0;
-	if (!ads1220) return 0;
-	ads1220->Data = 0;
 	ADS1220_Write(ADS1220_START);
 	while(!HAL_GPIO_ReadPin(INT_GPIO_Port,INT_Pin))
 	{
@@ -85,20 +83,13 @@ static uint32_t ADS1220_ReadOnce(ADS1220_TypeDef *ads1220)
 		delay_us(1);
 		if(Count >=0x3FFFF)return 0;
 	}
+	ads1220->Data = 0;
 	ADS1220_Write(ADS1220_RDATA);
 	ads1220->Data = ADS1220ReceiveByte();
 	ads1220->Data = (ads1220->Data << 8) | ADS1220ReceiveByte();
 	ads1220->Data = (ads1220->Data << 8) | ADS1220ReceiveByte();
 	if (ads1220->Data & 0x800000)ads1220->Data |= 0xff000000;
 	return  ads1220->Data;
-}
-
-uint32_t GET_ADS1220_Val(ADS1220_TypeDef *ads1220)
-{
-	/* The first conversion after START/configuration can be stale. Always
-	   discard it and return a fresh second conversion to all callers. */
-	(void)ADS1220_ReadOnce(ads1220);
-	return ADS1220_ReadOnce(ads1220);
 }
 /* USER CODE BEGIN 2 */
 

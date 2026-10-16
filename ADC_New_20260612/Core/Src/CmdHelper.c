@@ -21,6 +21,7 @@
 #include "wf100s.h"
 #include "wf2200.h"
 #include "wf280.h"
+#include "wf162a.h"
 //一类：系统指令
 //二类：串口通讯方式指令
 //三类: IIC通讯方式指令
@@ -41,6 +42,7 @@ void RunPendingProductTest(void)
     case WF183DE: AllTestFor183(sendBufBy, PRODUCT_RESULT_LENGTH); break;
     case WF100S: AllTestFor100S(sendBufBy, PRODUCT_RESULT_LENGTH); break;
     case WF2200: AllTestFor2200(sendBufBy, PRODUCT_RESULT_LENGTH); break;
+    case WF162A: AllTestFor162A(sendBufBy, PRODUCT_RESULT_LENGTH); break;
     default: break;
     }
     IsTaskDone = 0;
@@ -63,6 +65,9 @@ void ParseSystemCmd(const uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16
     case TYPE1_SET_ADC: case TYPE1_SAVE_ADC: required_cmd = 6; break;
     case TYPE1_SET_VDD: required_cmd = 4; break;
     case TYPE1_SET_VPP: required_cmd = 3; break;
+    case TYPE1_WF280_M1: required_cmd = 3; break;
+    case TYPE1_WF280_COEFF: required_cmd = 3; break;
+    case TYPE1_WF280_OUTDATA: case TYPE1_WF280_2V_OUTDATA: required_cmd = 4; break;
     default: break;
     }
     if (cmd_lens < required_cmd || out_lens < required_out) {
@@ -137,6 +142,22 @@ void ParseSystemCmd(const uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16
         case TYPE1_WF3050_FT_DATA:
             if (out_lens < 12u) out[0] = CMD_ERROR_LENGTH;
             else WF3050FtData(out, out_lens);
+            break;
+        case TYPE1_WF280_M1:
+            if (cmd[2] == 0u || cmd[2] > WF280_COEFF_MAX ||
+                out_lens < (uint16_t)(5u + cmd[2])) out[0] = CMD_ERROR_LENGTH;
+            else (void)WF280ReadM1((uint8_t)cmd[2], out, out_lens);
+            break;
+        case TYPE1_WF280_COEFF:
+            if (cmd[2] == 0u || cmd[2] > WF280_COEFF_MAX ||
+                out_lens < (uint16_t)(cmd[2] + 1u)) out[0] = CMD_ERROR_LENGTH;
+            else (void)WF280ReadCoefficients(0u, (uint8_t)cmd[2], out, out_lens);
+            break;
+        case TYPE1_WF280_OUTDATA:
+        case TYPE1_WF280_2V_OUTDATA:
+            if (out_lens < WF280_OUTPUT_RESULT_LENGTH) out[0] = CMD_ERROR_LENGTH;
+            else (void)WF280TestOutput(cmdHead == TYPE1_WF280_2V_OUTDATA ? 2000u : 3300u,
+                                       cmd[2], cmd[3], out, out_lens);
             break;
         default:
 		break;
@@ -236,6 +257,8 @@ void ParseI2CCmd(const uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t 
 void ParseOwiCmd(const uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_lens)
 {
 	uint8_t RecvBuff[DATA_LENTH] = {0};
+	(void)cmd;
+	(void)cmd_lens;
     if (!out || out_lens < 4u) return;
 	OWI_Device.cycle = 0;
 	OWI(RecvBuff,200);
@@ -286,6 +309,11 @@ void Parse(const uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_le
         case 11:
             if (out_lens < WF280_RESULT_LENGTH) out[0] = CMD_ERROR_LENGTH;
             else WF280CheckOtpReg(out, out_lens);
+            break;
+        case TYPE1_WF162A_TEST:
+            IsTask_mub = WF162A;
+            IsTaskDone = 1;
+            out[0] = 1;
             break;
         default:
             break;

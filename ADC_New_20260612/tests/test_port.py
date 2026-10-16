@@ -64,6 +64,7 @@ HARNESS = r'''
 #include "I2CHelper.h"
 #include "owi.h"
 #include "wf280.h"
+#include "wf162a.h"
 #include "wf183.h"
 #include "wf2200.h"
 #include "wf100s.h"
@@ -72,9 +73,10 @@ ADS1220_TypeDef ADS1220;
 OWI_TypeDef OWI_Device;
 I2CInfo i2c1;
 UartInfo uart1;
-static unsigned voltage, last_power_on_mv, power_on, power_off, writes, reads, selected, mismatch, nack;
+static unsigned voltage, last_power_on_mv, power_on, power_off, writes, reads, selected, last_command, mismatch, nack;
 static unsigned tx_pin, rx_pin, uart_receives, uart_fail_once, flash_words;
 static uint32_t last_gpio_mode;
+static uint32_t adc_raw = 0x123456;
 void HAL_GPIO_WritePin(GPIO_TypeDef *p,uint16_t pin,GPIO_PinState s) {(void)p;(void)pin;(void)s;}
 GPIO_PinState HAL_GPIO_ReadPin(GPIO_TypeDef *p,uint16_t pin) {(void)p;(void)pin;return GPIO_PIN_RESET;}
 void HAL_GPIO_Init(GPIO_TypeDef *p,GPIO_InitTypeDef *i) {(void)p;last_gpio_mode=i->Mode;}
@@ -82,7 +84,7 @@ void osDelay(uint32_t n) {(void)n;}
 void delay_us(uint32_t n) {(void)n;}
 void MCP4725_WriteData_Voltage(uint16_t mv) {voltage=mv;if(mv){last_power_on_mv=mv;++power_on;}else ++power_off;}
 void ADS1220_Init(ADS1220_TypeDef *a) {a->state=1;}
-uint32_t GET_ADS1220_Val(ADS1220_TypeDef *a) {(void)a;return 0x123456;}
+uint32_t GET_ADS1220_Val(ADS1220_TypeDef *a) {(void)a;return adc_raw;}
 void ADS1220_WriteRegister(uint32_t a,uint32_t n,uint8_t *p) {(void)a;(void)n;(void)p;}
 void Write_Flash(uint32_t a,uint64_t *p,uint16_t n) {(void)a;flash_words=n;assert(!memcmp(p,&ADS1220,sizeof ADS1220));}
 uint8_t OWI(uint8_t *p,uint32_t t) {(void)t;OWI_Device.cycle=42;p[0]=1;p[1]=2;p[2]=3;return 1;}
@@ -100,12 +102,18 @@ void IIC_Init(I2CInfo *i,GPIO_TypeDef *sd,uint16_t sdp,GPIO_TypeDef *sc,uint16_t
 }
 void IIC_DeInit(I2CInfo *i) {(void)i;}
 uint8_t I2C_WriteNByte(I2CInfo *i,const uint8_t *b,uint32_t n) {
- (void)i;++writes;assert(n&&!(b[0]&1));if(b[0]==0x70){assert(n==2);selected=b[1];}return nack;
+ (void)i;++writes;assert(n>=2&&!(b[0]&1));
+ if(b[0]==0x70){last_command=b[1];selected=(n==2)?b[1]:b[2];}
+ return nack;
 }
 uint8_t I2C_ReadNByte(I2CInfo *i,uint8_t a,uint8_t *b,uint32_t n) {
  (void)i;++reads;if(nack)return nack;
  for(unsigned j=0;j<n;++j)b[j]=j+1;
- if(a==0x70){assert(n==3);b[0]=selected;b[1]=0x12;b[2]=(selected&31)+(mismatch&&(selected&0x80));}return 0;
+ if(a==0x70){
+  if(n==1){b[0]=1;}
+  else if(n==3){b[0]=selected;b[1]=0x12;b[2]=(selected&31)+(mismatch&&(selected&0x80));}
+  else {assert(n==6);for(unsigned j=0;j<n;++j)b[j]=(uint8_t)(last_command+j);}
+ }return 0;
 }
 void iic_start(I2CInfo *i){(void)i;}
 void iic_stop(I2CInfo *i){(void)i;}
@@ -118,7 +126,7 @@ void pp_iic_stop(void){}
 void pp_iic_sendbyte(uint8_t b){(void)b;}
 uint8_t pp_iic_wait_ack(void){return nack;}
 uint8_t pp_iic_readbyte(uint8_t a){(void)a;return 0x44;}
-static void reset(void){writes=reads=selected=mismatch=nack=power_on=power_off=uart_receives=0;uart_fail_once=0;last_power_on_mv=0;IsTaskDone=0;}
+static void reset(void){writes=reads=selected=last_command=mismatch=nack=power_on=power_off=uart_receives=0;uart_fail_once=0;last_power_on_mv=0;adc_raw=0x123456;IsTaskDone=0;}
 int main(void){
  uint16_t out[122], c[70]={0};
  reset();c[0]=1;c[1]=TYPE1_SET_VDD;c[2]=0x88;c[3]=0x13;Parse(c,4,out,120);assert(voltage==5000);
@@ -132,10 +140,24 @@ int main(void){
  /* Product reads do not inject an extra address-only write. */
  reset();uint16_t readcmd[]={3,0,1,0,3,0,0xDA};assert(ProductI2CTransfer(readcmd,7,out,10)==0);assert(writes==0&&reads==1&&out[0]==1&&out[2]==3&&out[3]==0);
  nack=1;assert(ProductI2CTransfer(readcmd,7,out,10)==1&&out[0]==0&&out[3]==1);
- reset();WF280CheckOtpReg(out,120);assert(out[0]==1&&out[1]==0&&writes==64&&reads==64);
+ reset();WF280CheckOtpReg(out,120);assert(out[0]==1&&out[1]==0&&writes==64&&reads==128);
  reset();mismatch=1;WF280CheckOtpReg(out,120);assert(out[0]==0xFF&&out[1]==1);
  reset();nack=1;WF280CheckOtpReg(out,120);assert(out[0]==0xFF&&out[1]==1);
  reset();out[0]=0xABCD;WF280CheckOtpReg(out,1);assert(out[0]==0xABCD&&writes==0);
+ /* WF280 command adapter: reset/poll/read, both output rails, coefficient
+    reset, M1 current bytes and immediate short-circuit shutdown. */
+ reset();uint16_t wf280_out[40]={0};
+ assert(WF280ReadCoefficients(0,2,wf280_out,40)==0&&wf280_out[0]==0&&
+        wf280_out[1]==0x1200&&wf280_out[2]==0x1201&&last_power_on_mv==3300&&voltage==0);
+ reset();assert(WF280ReadM1(2,wf280_out,40)==0&&wf280_out[0]==0&&
+        wf280_out[1]==0x56&&wf280_out[2]==0x34&&wf280_out[3]==0x56&&wf280_out[4]==0x34&&
+        last_power_on_mv==2000&&voltage==0);
+ reset();assert(WF280TestOutput(3300,0x1234,5,wf280_out,40)==0&&wf280_out[0]==0&&
+        wf280_out[1]==0xAC&&wf280_out[6]==0xB1&&last_power_on_mv==3300&&voltage==0);
+ reset();nack=1;assert(WF280TestOutput(3300,0x1234,5,wf280_out,40)==WF280_STATUS_I2C&&
+        wf280_out[0]==WF280_STATUS_I2C&&power_off==1&&voltage==0);
+ reset();adc_raw=0xFFFFFF;assert(WF280TestOutput(2000,0x1234,5,wf280_out,40)==WF280_STATUS_SHORT&&
+        wf280_out[0]==WF280_STATUS_SHORT&&writes==0&&power_off==1&&voltage==0);
  /* All product paths preserve existing result offsets and power down. */
  reset();AllTestFor183(out,120);assert(last_power_on_mv==3300&&power_on==1&&power_off==1&&voltage==0);assert(out[2]==0xAA&&out[3]==8&&out[10]==42&&out[90]==1&&out[100]==1);assert(tx_pin==UART_TX_Pin&&rx_pin==UART_RX_Pin);
  reset();AllTestFor2200(out,120);assert(last_power_on_mv==3300&&power_on==1&&power_off==1&&out[0]==0x56&&out[4]==1&&out[8]==1&&out[22]==1&&out[73]==0x56);
@@ -152,6 +174,16 @@ int main(void){
   c[1]=TYPE1_GET_ALLTEST_DATA;Parse(c,2,out,120);assert(out[0]==CMD_ERROR_BUSY);
   RunPendingProductTest();assert(IsTaskDone==0&&power_off==1&&last_power_on_mv==(type==9?5000:3300));Parse(c,2,out,120);assert(!memcmp(out,sendBufBy,240));
  }
+ /* WF162A uses the same asynchronous product protocol and captures both
+    supply rounds (3.3 V then 5.0 V), each with current, half-bridge and
+    differential results. */
+ reset();ADS1220.config[0]=0x39;c[0]=PRODUCT_WF162A;Parse(c,1,out,120);assert(IsTaskDone==1&&out[0]==1);
+ c[0]=1;c[1]=TYPE1_GET_TASK_STATUS;Parse(c,2,out,120);assert(out[0]==1);
+ c[1]=TYPE1_GET_ALLTEST_DATA;Parse(c,2,out,120);assert(out[0]==CMD_ERROR_BUSY);
+ RunPendingProductTest();assert(IsTaskDone==0&&power_on==2&&power_off==3&&last_power_on_mv==5000&&ADS1220.config[0]==0x39);
+ assert(sendBufBy[0]==0x56&&sendBufBy[4]==0x56&&sendBufBy[12]==0x56&&
+        sendBufBy[16]==0x56&&sendBufBy[20]==0x56&&sendBufBy[28]==0x56);
+ c[1]=TYPE1_GET_ALLTEST_DATA;Parse(c,2,out,120);assert(!memcmp(out,sendBufBy,240));
  /* Guard caller buffers and malformed command lengths. */
  reset();for(unsigned i=0;i<122;++i)out[i]=0xCAFE;
  c[0]=1;c[1]=TYPE1_GET_ADC;Parse(c,2,&out[1],1);assert(out[0]==0xCAFE&&out[1]==CMD_ERROR_LENGTH&&out[2]==0xCAFE);
@@ -209,7 +241,7 @@ uint8_t I2C_WriteNByte(I2CInfo *i,const uint8_t *b,uint32_t n){
  (void)i;assert(n==3);for(unsigned j=0;j<n;++j)last_data[j]=b[j];return 0;
 }
 int main(void){
- MCP4725_Init();assert(last_data[0]==0xC0&&last_data[1]==0x08&&last_data[2]==0x00);
+ MCP4725_Init();assert(last_data[0]==0xC0&&last_data[1]==0x00&&last_data[2]==0x00);
  MCP4725_WriteData_Voltage(5000);assert(last_data[1]==0x0C&&last_data[2]==0x1F);
  MCP4725_WriteData_Voltage(0);assert(last_data[1]==0&&last_data[2]==0);
  puts("PASS: actual DAC defaults to 3.3 V, selects 5 V, and powers down");return 0;
@@ -222,7 +254,7 @@ def run():
         for name, text in HEADERS.items():
             (tmp / name).write_text(text)
         for name, harness, sources in [
-            ("products", HARNESS, ["CmdHelper", "I2CHelper", "wf280", "wf183", "wf2200", "wf100s"]),
+            ("products", HARNESS, ["CmdHelper", "I2CHelper", "wf280", "wf162a", "wf183", "wf2200", "wf100s"]),
             ("drivers", DRIVER_HARNESS, ["SoftIIC", "SoftIIC_PP", "SoftUart"]),
             ("dac", DAC_HARNESS, ["MCP4725"]),
         ]:

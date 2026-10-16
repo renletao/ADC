@@ -416,6 +416,11 @@
               <FilePath>..\Core\Src\wf280.c</FilePath>
             </File>
             <File>
+              <FileName>wf162a.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\wf162a.c</FilePath>
+            </File>
+            <File>
               <FileName>wf183.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Core\Src\wf183.c</FilePath>

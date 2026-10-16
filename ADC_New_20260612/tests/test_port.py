@@ -65,6 +65,7 @@ HARNESS = r'''
 #include "owi.h"
 #include "wf280.h"
 #include "wf162a.h"
+#include "jh1400f_driver.h"
 #include "wf183.h"
 #include "wf2200.h"
 #include "wf100s.h"
@@ -111,7 +112,11 @@ uint8_t I2C_ReadNByte(I2CInfo *i,uint8_t a,uint8_t *b,uint32_t n) {
  for(unsigned j=0;j<n;++j)b[j]=j+1;
  if(a==0x70){
   if(n==1){b[0]=1;}
-  else if(n==3){b[0]=selected;b[1]=0x12;b[2]=(selected&31)+(mismatch&&(selected&0x80));}
+  else if(n==3){
+   if(last_command==0xFE){b[0]=1;b[1]=0x0D;b[2]=1;}
+   else {b[0]=selected;b[1]=0x12;b[2]=(selected&31)+(mismatch&&(selected&0x80));}
+  }
+  else if(n==4){assert(last_command==0xAD||last_command==0xAE);for(unsigned j=0;j<n;++j)b[j]=(uint8_t)(last_command+j);}
   else {assert(n==6);for(unsigned j=0;j<n;++j)b[j]=(uint8_t)(last_command+j);}
  }return 0;
 }
@@ -184,6 +189,17 @@ int main(void){
  assert(sendBufBy[0]==0x56&&sendBufBy[4]==0x56&&sendBufBy[12]==0x56&&
         sendBufBy[16]==0x56&&sendBufBy[20]==0x56&&sendBufBy[28]==0x56);
  c[1]=TYPE1_GET_ALLTEST_DATA;Parse(c,2,out,120);assert(!memcmp(out,sendBufBy,240));
+ /* JHM1400F uses the JH command table: product ID, BT/B/T data and both
+    normal and margin-1 OTP banks are captured under the same async flow. */
+ reset();c[0]=PRODUCT_JH1400F;Parse(c,1,out,120);assert(IsTaskDone==1&&out[0]==1);
+ RunPendingProductTest();assert(IsTaskDone==0&&power_on==1&&power_off==1&&last_power_on_mv==3300);
+ assert(sendBufBy[0]==0&&sendBufBy[9]==0&&sendBufBy[10]==0x0D&&sendBufBy[11]==1);
+ assert(sendBufBy[12]==0&&sendBufBy[13]==0xAE&&sendBufBy[16]==0&&sendBufBy[17]==0xAF);
+ assert(sendBufBy[20]==0&&sendBufBy[21]==0xAD&&sendBufBy[30]==0&&sendBufBy[32]==0x1200);
+ assert(sendBufBy[63]==0x121F&&sendBufBy[64]==0&&sendBufBy[65]==0x9F&&
+        sendBufBy[66]==0x1200&&sendBufBy[97]==0x121F);
+ reset();nack=1;c[0]=PRODUCT_JH1400F;Parse(c,1,out,120);RunPendingProductTest();
+ assert(sendBufBy[0]==1&&power_off==1&&voltage==0);
  /* Guard caller buffers and malformed command lengths. */
  reset();for(unsigned i=0;i<122;++i)out[i]=0xCAFE;
  c[0]=1;c[1]=TYPE1_GET_ADC;Parse(c,2,&out[1],1);assert(out[0]==0xCAFE&&out[1]==CMD_ERROR_LENGTH&&out[2]==0xCAFE);
@@ -254,7 +270,7 @@ def run():
         for name, text in HEADERS.items():
             (tmp / name).write_text(text)
         for name, harness, sources in [
-            ("products", HARNESS, ["CmdHelper", "I2CHelper", "wf280", "wf162a", "wf183", "wf2200", "wf100s"]),
+            ("products", HARNESS, ["CmdHelper", "I2CHelper", "wf280", "wf162a", "jh1400f_driver", "wf183", "wf2200", "wf100s"]),
             ("drivers", DRIVER_HARNESS, ["SoftIIC", "SoftIIC_PP", "SoftUart"]),
             ("dac", DAC_HARNESS, ["MCP4725"]),
         ]:

@@ -22,6 +22,7 @@
 #include "wf2200.h"
 #include "wf280.h"
 #include "wf162a.h"
+#include "jh1400f_driver.h"
 //一类：系统指令
 //二类：串口通讯方式指令
 //三类: IIC通讯方式指令
@@ -43,6 +44,7 @@ void RunPendingProductTest(void)
     case WF100S: AllTestFor100S(sendBufBy, PRODUCT_RESULT_LENGTH); break;
     case WF2200: AllTestFor2200(sendBufBy, PRODUCT_RESULT_LENGTH); break;
     case WF162A: AllTestFor162A(sendBufBy, PRODUCT_RESULT_LENGTH); break;
+    case JH1400F: AllTestForJH1400F(sendBufBy, PRODUCT_RESULT_LENGTH); break;
     default: break;
     }
     IsTaskDone = 0;
@@ -312,6 +314,11 @@ void Parse(const uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_le
             break;
         case TYPE1_WF162A_TEST:
             IsTask_mub = WF162A;
+            IsTaskDone = 1;
+            out[0] = 1;
+            break;
+        case TYPE1_JH1400F_TEST:
+            IsTask_mub = JH1400F;
             IsTaskDone = 1;
             out[0] = 1;
             break;

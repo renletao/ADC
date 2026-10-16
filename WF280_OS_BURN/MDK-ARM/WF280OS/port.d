@@ -1,0 +1,12 @@
+wf280os\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM0/port.c
+wf280os\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
+wf280os\port.o: g:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
+wf280os\port.o: g:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+wf280os\port.o: ../Core/Inc/FreeRTOSConfig.h
+wf280os\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
+wf280os\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h
+wf280os\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h
+wf280os\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM0/portmacro.h
+wf280os\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
+wf280os\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h
+wf280os\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h

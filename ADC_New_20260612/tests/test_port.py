@@ -186,12 +186,12 @@ int main(void){
  reset();ADS1220.config[0]=0x39;c[0]=PRODUCT_WF162A;Parse(c,1,out,120);assert(IsTaskDone==1&&out[0]==1);
  c[0]=1;c[1]=TYPE1_GET_TASK_STATUS;Parse(c,2,out,120);assert(out[0]==1);
  c[1]=TYPE1_GET_ALLTEST_DATA;Parse(c,2,out,120);assert(out[0]==CMD_ERROR_BUSY);
- RunPendingProductTest();assert(IsTaskDone==0&&power_on==1&&power_off==0&&last_power_on_mv==3300&&voltage==3300&&ADS1220.config[0]==0x39&&adc_inits==2);
+ RunPendingProductTest();assert(IsTaskDone==0&&power_on==1&&power_off==0&&last_power_on_mv==3300&&voltage==3300&&ADS1220.config[0]==0x39&&adc_inits==0);
  assert(sendBufBy[0]==0x56&&sendBufBy[4]==0x56&&sendBufBy[12]==0x56&&sendBufBy[16]==0);
  c[1]=TYPE1_GET_ALLTEST_DATA;Parse(c,2,out,120);assert(!memcmp(out,sendBufBy,240));
  reset();c[0]=1;c[1]=TYPE1_SET_VDD;c[2]=5000&0xFF;c[3]=5000>>8;Parse(c,4,out,120);reset();
  c[0]=PRODUCT_WF162A;Parse(c,1,out,120);assert(IsTaskDone==1&&out[0]==1);
- RunPendingProductTest();assert(IsTaskDone==0&&power_on==1&&power_off==0&&last_power_on_mv==5000&&voltage==5000&&adc_inits==2);
+ RunPendingProductTest();assert(IsTaskDone==0&&power_on==1&&power_off==0&&last_power_on_mv==5000&&voltage==5000&&ADS1220.config[0]==0x39&&adc_inits==0);
  /* Task 9's upper computer reads only registers 0..15.  Keep that view
     populated for 5 V and retain the extended 16..31 copy.  The 5 V words
     are normalized to the task-9 host's established 3.3 V scale. */

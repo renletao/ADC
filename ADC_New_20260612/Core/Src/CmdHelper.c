@@ -303,19 +303,29 @@ void Parse(const uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16_t out_le
 			ParseOwiCmd(cmd, cmd_lens, out, out_lens);
 		break;
 		
-        case 8: case 9: case 10:
-            IsTask_mub = cmdType == 8 ? WF183DE : (cmdType == 9 ? WF100S : WF2200);
+        case 8:
+            IsTask_mub = WF183DE;
+            IsTaskDone = 1;
+            out[0] = 1;
+            break;
+        case TYPE1_WF162A_TEST:
+            IsTask_mub = WF162A;
+            IsTaskDone = 1;
+            out[0] = 1;
+            break;
+        case 10:
+            IsTask_mub = WF2200;
+            IsTaskDone = 1;
+            out[0] = 1;
+            break;
+        case TYPE1_WF100S_TEST:
+            IsTask_mub = WF100S;
             IsTaskDone = 1;
             out[0] = 1;
             break;
         case 11:
             if (out_lens < WF280_RESULT_LENGTH) out[0] = CMD_ERROR_LENGTH;
             else WF280CheckOtpReg(out, out_lens);
-            break;
-        case TYPE1_WF162A_TEST:
-            IsTask_mub = WF162A;
-            IsTaskDone = 1;
-            out[0] = 1;
             break;
         case TYPE1_JH1400F_TEST:
             IsTask_mub = JH1400F;

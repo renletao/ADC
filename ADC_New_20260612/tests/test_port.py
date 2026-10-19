@@ -173,11 +173,12 @@ int main(void){
  reset();nack=1;AllTestFor183(out,120);assert(power_off==1&&voltage==0);
  reset();uart_fail_once=1;uint16_t serial_retry[]={2,0,4,100,2,20,0x55,4,0x24,0x37};ParseSerialCmd(serial_retry,10,out,10);assert(uart_receives==2&&out[2]==0xAA&&out[3]==8);
  /* Queued requests, busy protection, completion and saved results. */
- for(unsigned type=8;type<=10;++type){reset();c[0]=type;Parse(c,1,out,120);assert(IsTaskDone==1&&out[0]==1);
+ const unsigned async_commands[] = {8u, 10u, PRODUCT_WF100S};
+ for(unsigned index=0;index<3;++index){unsigned type=async_commands[index];reset();c[0]=type;Parse(c,1,out,120);assert(IsTaskDone==1&&out[0]==1);
   c[0]=1;c[1]=TYPE1_GET_TASK_STATUS;Parse(c,2,out,120);assert(out[0]==1);
   c[1]=TYPE1_SET_VDD;Parse(c,4,out,120);assert(out[0]==CMD_ERROR_BUSY&&power_on==0);
   c[1]=TYPE1_GET_ALLTEST_DATA;Parse(c,2,out,120);assert(out[0]==CMD_ERROR_BUSY);
-  RunPendingProductTest();assert(IsTaskDone==0&&power_off==1&&last_power_on_mv==(type==9?5000:3300));Parse(c,2,out,120);assert(!memcmp(out,sendBufBy,240));
+  RunPendingProductTest();assert(IsTaskDone==0&&power_off==1&&last_power_on_mv==(type==PRODUCT_WF100S?5000:3300));Parse(c,2,out,120);assert(!memcmp(out,sendBufBy,240));
  }
  /* WF162A uses the same asynchronous product protocol and captures both
     supply rounds (3.3 V then 5.0 V), each with current, half-bridge and

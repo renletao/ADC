@@ -81,6 +81,11 @@ void AllTestFor162A(uint16_t *out, uint16_t out_lens)
     if (!out || out_lens < WF162A_RESULT_LENGTH) return;
     memset(out, 0, out_lens * sizeof(*out));
     memcpy(saved_config, ADS1220.config, sizeof(saved_config));
+    /* A previous round may leave DRDY asserted or a conversion in flight
+       after VDD is removed.  Reset and re-apply the saved configuration at
+       the start of every round, matching the established WF100S sequence and
+       preventing the next round from waiting on a stale conversion. */
+    ADS1220_Init(&ADS1220);
     /* The host selects 3.3 V or 5.0 V with command 0x201 before cmd=9.
        The existing upper-computer task-9 reader requests only the first
        16 registers, so every selected round must be exposed at out[0..15].
@@ -93,6 +98,6 @@ void AllTestFor162A(uint16_t *out, uint16_t out_lens)
                WF162A_SUPPLY_RESULT_LENGTH * sizeof(*selected_result));
     }
     memcpy(ADS1220.config, saved_config, sizeof(saved_config));
-    ADS1220_WriteRegister(0u, 1u, &ADS1220.config[0]);
+    ADS1220_Init(&ADS1220);
     MCP4725_WriteData_Voltage(0u);
 }

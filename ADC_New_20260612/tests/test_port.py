@@ -74,7 +74,7 @@ ADS1220_TypeDef ADS1220;
 OWI_TypeDef OWI_Device;
 I2CInfo i2c1;
 UartInfo uart1;
-static unsigned voltage, last_power_on_mv, power_on, power_off, writes, reads, selected, last_command, mismatch, nack;
+static unsigned voltage, last_power_on_mv, power_on, power_off, writes, reads, selected, last_command, mismatch, nack, adc_inits;
 static unsigned tx_pin, rx_pin, uart_receives, uart_fail_once, flash_words;
 static uint32_t last_gpio_mode;
 static uint32_t adc_raw = 0x123456;
@@ -84,7 +84,7 @@ void HAL_GPIO_Init(GPIO_TypeDef *p,GPIO_InitTypeDef *i) {(void)p;last_gpio_mode=
 void osDelay(uint32_t n) {(void)n;}
 void delay_us(uint32_t n) {(void)n;}
 void MCP4725_WriteData_Voltage(uint16_t mv) {voltage=mv;if(mv){last_power_on_mv=mv;++power_on;}else ++power_off;}
-void ADS1220_Init(ADS1220_TypeDef *a) {a->state=1;}
+void ADS1220_Init(ADS1220_TypeDef *a) {a->state=1;++adc_inits;}
 uint32_t GET_ADS1220_Val(ADS1220_TypeDef *a) {(void)a;return adc_raw;}
 void ADS1220_WriteRegister(uint32_t a,uint32_t n,uint8_t *p) {(void)a;(void)n;(void)p;}
 void Write_Flash(uint32_t a,uint64_t *p,uint16_t n) {(void)a;flash_words=n;assert(!memcmp(p,&ADS1220,sizeof ADS1220));}
@@ -131,7 +131,7 @@ void pp_iic_stop(void){}
 void pp_iic_sendbyte(uint8_t b){(void)b;}
 uint8_t pp_iic_wait_ack(void){return nack;}
 uint8_t pp_iic_readbyte(uint8_t a){(void)a;return 0x44;}
-static void reset(void){writes=reads=selected=last_command=mismatch=nack=power_on=power_off=uart_receives=0;uart_fail_once=0;last_power_on_mv=0;adc_raw=0x123456;IsTaskDone=0;}
+static void reset(void){writes=reads=selected=last_command=mismatch=nack=power_on=power_off=uart_receives=adc_inits=0;uart_fail_once=0;last_power_on_mv=0;adc_raw=0x123456;IsTaskDone=0;}
 int main(void){
  uint16_t out[122], c[70]={0};
  reset();c[0]=1;c[1]=TYPE1_SET_VDD;c[2]=0x88;c[3]=0x13;Parse(c,4,out,120);assert(voltage==5000);
@@ -186,12 +186,12 @@ int main(void){
  reset();ADS1220.config[0]=0x39;c[0]=PRODUCT_WF162A;Parse(c,1,out,120);assert(IsTaskDone==1&&out[0]==1);
  c[0]=1;c[1]=TYPE1_GET_TASK_STATUS;Parse(c,2,out,120);assert(out[0]==1);
  c[1]=TYPE1_GET_ALLTEST_DATA;Parse(c,2,out,120);assert(out[0]==CMD_ERROR_BUSY);
- RunPendingProductTest();assert(IsTaskDone==0&&power_on==0&&power_off==1&&voltage==0&&ADS1220.config[0]==0x39);
+ RunPendingProductTest();assert(IsTaskDone==0&&power_on==0&&power_off==1&&voltage==0&&ADS1220.config[0]==0x39&&adc_inits==2);
  assert(sendBufBy[0]==0x56&&sendBufBy[4]==0x56&&sendBufBy[12]==0x56&&sendBufBy[16]==0);
  c[1]=TYPE1_GET_ALLTEST_DATA;Parse(c,2,out,120);assert(!memcmp(out,sendBufBy,240));
  reset();c[0]=1;c[1]=TYPE1_SET_VDD;c[2]=5000&0xFF;c[3]=5000>>8;Parse(c,4,out,120);reset();
  c[0]=PRODUCT_WF162A;Parse(c,1,out,120);assert(IsTaskDone==1&&out[0]==1);
- RunPendingProductTest();assert(IsTaskDone==0&&power_on==0&&power_off==1&&voltage==0);
+ RunPendingProductTest();assert(IsTaskDone==0&&power_on==0&&power_off==1&&voltage==0&&adc_inits==2);
  /* Task 9's upper computer reads only registers 0..15.  Keep that view
     populated for 5 V and retain the extended 16..31 copy. */
  assert(sendBufBy[0]==0x56&&sendBufBy[4]==0x56&&sendBufBy[12]==0x56&&

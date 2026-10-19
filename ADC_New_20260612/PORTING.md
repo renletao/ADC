@@ -8,7 +8,7 @@
 - `Core/Src/wf183.c` / `Core/Inc/wf183.h`：`AllTestFor183()`，至少 118 个结果寄存器。
 - `Core/Src/wf2200.c` / `Core/Inc/wf2200.h`：`AllTestFor2200()`，至少 77 个结果寄存器；`WF3050FtData()`，至少 12 个。
 - `Core/Src/wf100s.c` / `Core/Inc/wf100s.h`：`AllTestFor100S()`，至少 16 个结果寄存器。
-- `Core/Src/wf162a.c` / `Core/Inc/wf162a.h`：`AllTestFor162A()`，32 个结果寄存器，分别保存 3.3 V 和 5.0 V 供电下的工作电流、两个半桥电压及差分输出。
+- `Core/Src/wf162a.c` / `Core/Inc/wf162a.h`：`AllTestFor162A()`，任务 9 的前 16 个结果寄存器始终保存上位机当前选择电压下的工作电流、两个半桥电压及差分输出；5.0 V 测试同时保留一份到 16..31 扩展区。
 - `Core/Src/jh1400f_driver.c` / `Core/Inc/jh1400f_driver.h`：`AllTestForJH1400F()`，按 `JH1400F.h` 和参考工程的 I2C 写/轮询/读事务读取产品 ID、桥值、温度、桥温组合值及两组 OTP，使用 98 个结果寄存器。
 - 补入 `I2CHelper.c/.h`、`SoftIIC_PP.c/.h`。辅助驱动使用新版 `I2CInfo *` 接口，不引入旧版同名但不兼容的 I2C 结构体或全局 I2C 驱动。
 - 新增的 `wf162a.c` 已加入 `MDK-ARM/ADC.uvprojx`，头文件统一位于 `Core/Inc`。

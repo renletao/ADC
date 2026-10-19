@@ -82,11 +82,16 @@ void AllTestFor162A(uint16_t *out, uint16_t out_lens)
     memset(out, 0, out_lens * sizeof(*out));
     memcpy(saved_config, ADS1220.config, sizeof(saved_config));
     /* The host selects 3.3 V or 5.0 V with command 0x201 before cmd=9.
-       Store the selected round in its established bank and leave the other
-       bank zeroed; the firmware no longer changes the supply automatically. */
-    selected_result = (wf162a_configured_supply_mv == 5000u) ?
-                      &out[WF162A_SUPPLY_RESULT_LENGTH] : &out[0];
+       The existing upper-computer task-9 reader requests only the first
+       16 registers, so every selected round must be exposed at out[0..15].
+       Keep a copy in the 5 V bank as well for callers that read the extended
+       32-register layout. */
+    selected_result = &out[0];
     wf162a_run_supply(wf162a_configured_supply_mv, selected_result);
+    if (wf162a_configured_supply_mv == 5000u) {
+        memcpy(&out[WF162A_SUPPLY_RESULT_LENGTH], selected_result,
+               WF162A_SUPPLY_RESULT_LENGTH * sizeof(*selected_result));
+    }
     memcpy(ADS1220.config, saved_config, sizeof(saved_config));
     ADS1220_WriteRegister(0u, 1u, &ADS1220.config[0]);
     MCP4725_WriteData_Voltage(0u);

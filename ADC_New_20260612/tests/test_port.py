@@ -192,7 +192,10 @@ int main(void){
  reset();c[0]=1;c[1]=TYPE1_SET_VDD;c[2]=5000&0xFF;c[3]=5000>>8;Parse(c,4,out,120);reset();
  c[0]=PRODUCT_WF162A;Parse(c,1,out,120);assert(IsTaskDone==1&&out[0]==1);
  RunPendingProductTest();assert(IsTaskDone==0&&power_on==0&&power_off==1&&voltage==0);
- assert(sendBufBy[0]==0&&sendBufBy[16]==0x56&&sendBufBy[20]==0x56&&sendBufBy[28]==0x56);
+ /* Task 9's upper computer reads only registers 0..15.  Keep that view
+    populated for 5 V and retain the extended 16..31 copy. */
+ assert(sendBufBy[0]==0x56&&sendBufBy[4]==0x56&&sendBufBy[12]==0x56&&
+        sendBufBy[16]==0x56&&sendBufBy[20]==0x56&&sendBufBy[28]==0x56);
  /* JHM1400F uses the JH command table: product ID, BT/B/T data and both
     normal and margin-1 OTP banks are captured under the same async flow. */
  reset();c[0]=PRODUCT_JH1400F;Parse(c,1,out,120);assert(IsTaskDone==1&&out[0]==1);

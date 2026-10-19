@@ -186,16 +186,27 @@ int main(void){
  reset();ADS1220.config[0]=0x39;c[0]=PRODUCT_WF162A;Parse(c,1,out,120);assert(IsTaskDone==1&&out[0]==1);
  c[0]=1;c[1]=TYPE1_GET_TASK_STATUS;Parse(c,2,out,120);assert(out[0]==1);
  c[1]=TYPE1_GET_ALLTEST_DATA;Parse(c,2,out,120);assert(out[0]==CMD_ERROR_BUSY);
- RunPendingProductTest();assert(IsTaskDone==0&&power_on==0&&power_off==1&&voltage==0&&ADS1220.config[0]==0x39&&adc_inits==2);
+ RunPendingProductTest();assert(IsTaskDone==0&&power_on==1&&power_off==0&&last_power_on_mv==3300&&voltage==3300&&ADS1220.config[0]==0x39&&adc_inits==2);
  assert(sendBufBy[0]==0x56&&sendBufBy[4]==0x56&&sendBufBy[12]==0x56&&sendBufBy[16]==0);
  c[1]=TYPE1_GET_ALLTEST_DATA;Parse(c,2,out,120);assert(!memcmp(out,sendBufBy,240));
  reset();c[0]=1;c[1]=TYPE1_SET_VDD;c[2]=5000&0xFF;c[3]=5000>>8;Parse(c,4,out,120);reset();
  c[0]=PRODUCT_WF162A;Parse(c,1,out,120);assert(IsTaskDone==1&&out[0]==1);
- RunPendingProductTest();assert(IsTaskDone==0&&power_on==0&&power_off==1&&voltage==0&&adc_inits==2);
+ RunPendingProductTest();assert(IsTaskDone==0&&power_on==1&&power_off==0&&last_power_on_mv==5000&&voltage==5000&&adc_inits==2);
  /* Task 9's upper computer reads only registers 0..15.  Keep that view
-    populated for 5 V and retain the extended 16..31 copy. */
- assert(sendBufBy[0]==0x56&&sendBufBy[4]==0x56&&sendBufBy[12]==0x56&&
-        sendBufBy[16]==0x56&&sendBufBy[20]==0x56&&sendBufBy[28]==0x56);
+    populated for 5 V and retain the extended 16..31 copy.  The 5 V words
+    are normalized to the task-9 host's established 3.3 V scale. */
+ assert(sendBufBy[0]==0x1D&&sendBufBy[4]==0x1D&&sendBufBy[12]==0x1D&&
+        sendBufBy[16]==0x1D&&sendBufBy[20]==0x1D&&sendBufBy[28]==0x1D);
+ /* A second task-9 round reuses the selected rail without another 0x201
+    command; an explicit 0x201=0 remains the shutdown path. */
+ reset();c[0]=PRODUCT_WF162A;Parse(c,1,out,120);RunPendingProductTest();
+ assert(power_on==1&&power_off==0&&last_power_on_mv==5000&&voltage==5000);
+ c[0]=1;c[1]=TYPE1_SET_VDD;c[2]=0;c[3]=0;Parse(c,4,out,120);
+ assert(power_off==1&&voltage==0);
+ /* WF100S still forces 5 V even if the shared VDD command selected 3.3 V. */
+ reset();c[0]=1;c[1]=TYPE1_SET_VDD;c[2]=3300&0xFF;c[3]=3300>>8;Parse(c,4,out,120);
+ reset();c[0]=PRODUCT_WF100S;Parse(c,1,out,120);RunPendingProductTest();
+ assert(last_power_on_mv==5000&&power_off==1&&voltage==0);
  /* JHM1400F uses the JH command table: product ID, BT/B/T data and both
     normal and margin-1 OTP banks are captured under the same async flow. */
  reset();c[0]=PRODUCT_JH1400F;Parse(c,1,out,120);assert(IsTaskDone==1&&out[0]==1);

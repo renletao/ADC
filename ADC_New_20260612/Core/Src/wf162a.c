@@ -2,6 +2,7 @@
 #include "ADS1220.h"
 #include "MCP4725.h"
 #include "cmsis_os.h"
+#include <stdint.h>
 #include <string.h>
 
 /*
@@ -21,7 +22,9 @@
 #define WF162A_SAMPLE_DELAY_MS 20u
 #define WF162A_SAMPLE_ATTEMPTS 10u
 
-static uint16_t wf162a_configured_supply_mv = 3300u;
+/* WF162A defaults to 5 V.  0x201 may select 3.3 V or 5 V and the
+   selection remains active until the host changes it. */
+static uint16_t wf162a_configured_supply_mv = 5000u;
 
 void WF162A_SetConfiguredSupply(uint16_t supply_mv)
 {
@@ -32,12 +35,27 @@ void WF162A_SetConfiguredSupply(uint16_t supply_mv)
 static void wf162a_store_raw(uint16_t *dst, uint32_t raw)
 {
     /* Product result buffers are 16-bit Modbus slots, but the existing
-       protocol stores one raw ADC byte per slot (the same layout used by
-       WF100S).  Keep the upper byte of each slot clear. */
+       protocol stores one ADC byte per slot (the same layout used by WF100S).
+       Keep the upper byte of each slot clear. */
     dst[0] = (uint8_t)raw;
     dst[1] = (uint8_t)(raw >> 8);
     dst[2] = (uint8_t)(raw >> 16);
     dst[3] = (uint8_t)(raw >> 24);
+}
+
+static uint32_t wf162a_host_scale(uint32_t raw, uint16_t supply_mv)
+{
+    int64_t value = (int32_t)raw;
+
+    /* Task 9's existing host converts words with the 3.3 V reference.  The
+       ADS1220 reference follows VDD, so normalize 5 V words to that host
+       scale while preserving signed current and differential results. */
+    if (supply_mv == 5000u)
+        value = (value * 5000) / 3300;
+
+    if (value > INT32_MAX) value = INT32_MAX;
+    if (value < INT32_MIN) value = INT32_MIN;
+    return (uint32_t)(int32_t)value;
 }
 
 static uint32_t wf162a_sample(uint8_t config)
@@ -60,17 +78,18 @@ static uint32_t wf162a_sample(uint8_t config)
 
 static void wf162a_run_supply(uint16_t supply_mv, uint16_t *result)
 {
-    /* VDD is selected by the host with 0x201 before cmd=9. */
-    (void)supply_mv;
+    /* Keep the selected rail valid even when cmd=9 is sent without a
+       preceding 0x201 write.  This makes the default 5 V mode usable. */
+    MCP4725_WriteData_Voltage(supply_mv);
     osDelay(WF162A_SETTLE_MS);
     wf162a_store_raw(result + WF162A_CURRENT_OFFSET,
-                     wf162a_sample(WF162A_CURRENT_CONFIG));
+                     wf162a_host_scale(wf162a_sample(WF162A_CURRENT_CONFIG), supply_mv));
     wf162a_store_raw(result + WF162A_VOUT_PLUS_OFFSET,
-                     wf162a_sample(WF162A_VOUT_PLUS_CONFIG));
+                     wf162a_host_scale(wf162a_sample(WF162A_VOUT_PLUS_CONFIG), supply_mv));
     wf162a_store_raw(result + WF162A_VOUT_MINUS_OFFSET,
-                     wf162a_sample(WF162A_VOUT_MINUS_CONFIG));
+                     wf162a_host_scale(wf162a_sample(WF162A_VOUT_MINUS_CONFIG), supply_mv));
     wf162a_store_raw(result + WF162A_DIFF_OFFSET,
-                     wf162a_sample(WF162A_DIFF_CONFIG));
+                     wf162a_host_scale(wf162a_sample(WF162A_DIFF_CONFIG), supply_mv));
 }
 
 void AllTestFor162A(uint16_t *out, uint16_t out_lens)
@@ -86,7 +105,7 @@ void AllTestFor162A(uint16_t *out, uint16_t out_lens)
        the start of every round, matching the established WF100S sequence and
        preventing the next round from waiting on a stale conversion. */
     ADS1220_Init(&ADS1220);
-    /* The host selects 3.3 V or 5.0 V with command 0x201 before cmd=9.
+    /* The host may select 3.3 V or 5.0 V with command 0x201 before cmd=9.
        The existing upper-computer task-9 reader requests only the first
        16 registers, so every selected round must be exposed at out[0..15].
        Keep a copy in the 5 V bank as well for callers that read the extended
@@ -99,5 +118,7 @@ void AllTestFor162A(uint16_t *out, uint16_t out_lens)
     }
     memcpy(ADS1220.config, saved_config, sizeof(saved_config));
     ADS1220_Init(&ADS1220);
-    MCP4725_WriteData_Voltage(0u);
+    /* Keep VDD on for repeated task-9 measurements.  The host can explicitly
+       switch it off with {1, 0x201, 0, 0}; other product tests keep their
+       existing power lifecycle. */
 }

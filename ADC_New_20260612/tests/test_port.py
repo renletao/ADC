@@ -180,16 +180,19 @@ int main(void){
   c[1]=TYPE1_GET_ALLTEST_DATA;Parse(c,2,out,120);assert(out[0]==CMD_ERROR_BUSY);
   RunPendingProductTest();assert(IsTaskDone==0&&power_off==1&&last_power_on_mv==(type==PRODUCT_WF100S?5000:3300));Parse(c,2,out,120);assert(!memcmp(out,sendBufBy,240));
  }
- /* WF162A uses the same asynchronous product protocol and captures both
-    supply rounds (3.3 V then 5.0 V), each with current, half-bridge and
-    differential results. */
+ /* WF162A uses the same asynchronous product protocol as WF100S. The host
+    selects the supply with 0x201; one cmd=9 captures one selected round. */
+ reset();c[0]=1;c[1]=TYPE1_SET_VDD;c[2]=3300&0xFF;c[3]=3300>>8;Parse(c,4,out,120);
  reset();ADS1220.config[0]=0x39;c[0]=PRODUCT_WF162A;Parse(c,1,out,120);assert(IsTaskDone==1&&out[0]==1);
  c[0]=1;c[1]=TYPE1_GET_TASK_STATUS;Parse(c,2,out,120);assert(out[0]==1);
  c[1]=TYPE1_GET_ALLTEST_DATA;Parse(c,2,out,120);assert(out[0]==CMD_ERROR_BUSY);
- RunPendingProductTest();assert(IsTaskDone==0&&power_on==2&&power_off==3&&last_power_on_mv==5000&&ADS1220.config[0]==0x39);
- assert(sendBufBy[0]==0x56&&sendBufBy[4]==0x56&&sendBufBy[12]==0x56&&
-        sendBufBy[16]==0x56&&sendBufBy[20]==0x56&&sendBufBy[28]==0x56);
+ RunPendingProductTest();assert(IsTaskDone==0&&power_on==0&&power_off==1&&voltage==0&&ADS1220.config[0]==0x39);
+ assert(sendBufBy[0]==0x56&&sendBufBy[4]==0x56&&sendBufBy[12]==0x56&&sendBufBy[16]==0);
  c[1]=TYPE1_GET_ALLTEST_DATA;Parse(c,2,out,120);assert(!memcmp(out,sendBufBy,240));
+ reset();c[0]=1;c[1]=TYPE1_SET_VDD;c[2]=5000&0xFF;c[3]=5000>>8;Parse(c,4,out,120);reset();
+ c[0]=PRODUCT_WF162A;Parse(c,1,out,120);assert(IsTaskDone==1&&out[0]==1);
+ RunPendingProductTest();assert(IsTaskDone==0&&power_on==0&&power_off==1&&voltage==0);
+ assert(sendBufBy[0]==0&&sendBufBy[16]==0x56&&sendBufBy[20]==0x56&&sendBufBy[28]==0x56);
  /* JHM1400F uses the JH command table: product ID, BT/B/T data and both
     normal and margin-1 OTP banks are captured under the same async flow. */
  reset();c[0]=PRODUCT_JH1400F;Parse(c,1,out,120);assert(IsTaskDone==1&&out[0]==1);

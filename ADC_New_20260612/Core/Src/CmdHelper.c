@@ -126,6 +126,7 @@ void ParseSystemCmd(const uint16_t *cmd, uint8_t cmd_lens, uint16_t *out, uint16
 		case TYPE1_SET_VDD://201：设置adc供电使能 
 		  Vout = ((uint16_t)(cmd[3] << 8) | cmd[2]);
 			MCP4725_WriteData_Voltage(Vout);
+			WF162A_SetConfiguredSupply(Vout);
             out[0] = 0;
 		break;
 				

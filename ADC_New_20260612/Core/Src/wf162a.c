@@ -21,6 +21,14 @@
 #define WF162A_SAMPLE_DELAY_MS 20u
 #define WF162A_SAMPLE_ATTEMPTS 10u
 
+static uint16_t wf162a_configured_supply_mv = 3300u;
+
+void WF162A_SetConfiguredSupply(uint16_t supply_mv)
+{
+    if (supply_mv == 3300u || supply_mv == 5000u)
+        wf162a_configured_supply_mv = supply_mv;
+}
+
 static void wf162a_store_raw(uint16_t *dst, uint32_t raw)
 {
     /* Product result buffers are 16-bit Modbus slots, but the existing
@@ -52,7 +60,8 @@ static uint32_t wf162a_sample(uint8_t config)
 
 static void wf162a_run_supply(uint16_t supply_mv, uint16_t *result)
 {
-    MCP4725_WriteData_Voltage(supply_mv);
+    /* VDD is selected by the host with 0x201 before cmd=9. */
+    (void)supply_mv;
     osDelay(WF162A_SETTLE_MS);
     wf162a_store_raw(result + WF162A_CURRENT_OFFSET,
                      wf162a_sample(WF162A_CURRENT_CONFIG));
@@ -62,20 +71,22 @@ static void wf162a_run_supply(uint16_t supply_mv, uint16_t *result)
                      wf162a_sample(WF162A_VOUT_MINUS_CONFIG));
     wf162a_store_raw(result + WF162A_DIFF_OFFSET,
                      wf162a_sample(WF162A_DIFF_CONFIG));
-    MCP4725_WriteData_Voltage(0u);
 }
 
 void AllTestFor162A(uint16_t *out, uint16_t out_lens)
 {
     uint8_t saved_config[4];
+    uint16_t *selected_result;
 
     if (!out || out_lens < WF162A_RESULT_LENGTH) return;
     memset(out, 0, out_lens * sizeof(*out));
     memcpy(saved_config, ADS1220.config, sizeof(saved_config));
-    /* 0..15 = 3.3 V, 16..31 = 5.0 V. Each block preserves the historical
-       four-byte little-endian ADS1220 result layout. */
-    wf162a_run_supply(3300u, &out[0]);
-    wf162a_run_supply(5000u, &out[WF162A_SUPPLY_RESULT_LENGTH]);
+    /* The host selects 3.3 V or 5.0 V with command 0x201 before cmd=9.
+       Store the selected round in its established bank and leave the other
+       bank zeroed; the firmware no longer changes the supply automatically. */
+    selected_result = (wf162a_configured_supply_mv == 5000u) ?
+                      &out[WF162A_SUPPLY_RESULT_LENGTH] : &out[0];
+    wf162a_run_supply(wf162a_configured_supply_mv, selected_result);
     memcpy(ADS1220.config, saved_config, sizeof(saved_config));
     ADS1220_WriteRegister(0u, 1u, &ADS1220.config[0]);
     MCP4725_WriteData_Voltage(0u);

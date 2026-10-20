@@ -68,3 +68,5 @@ adc\cmdhelper.o: ../Core/Inc/wf183.h
 adc\cmdhelper.o: ../Core/Inc/wf100s.h
 adc\cmdhelper.o: ../Core/Inc/wf2200.h
 adc\cmdhelper.o: ../Core/Inc/wf280.h
+adc\cmdhelper.o: ../Core/Inc/wf162a.h
+adc\cmdhelper.o: ../Core/Inc/jh1400f_driver.h

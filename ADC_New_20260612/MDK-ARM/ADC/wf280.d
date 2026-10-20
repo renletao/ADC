@@ -41,11 +41,10 @@ adc\wf280.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_tim_ex.h
 adc\wf280.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_uart.h
 adc\wf280.o: ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_uart_ex.h
 adc\wf280.o: ../Core/Inc/CmdHelper.h
-adc\wf280.o: ../Core/Inc/I2CHelper.h
-adc\wf280.o: ../Core/Inc/SoftIIC.h
+adc\wf280.o: ../Core/Inc/ADS1220.h
 adc\wf280.o: ../Core/Inc/main.h
-adc\wf280.o: ../Core/Inc/SoftIIC_PP.h
-adc\wf280.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\string.h
+adc\wf280.o: ../Core/Inc/MCP4725.h
+adc\wf280.o: ../Core/Inc/SoftIIC.h
 adc\wf280.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.h
 adc\wf280.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
 adc\wf280.o: ../Core/Inc/FreeRTOSConfig.h
@@ -60,3 +59,4 @@ adc\wf280.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/timers.h
 adc\wf280.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h
 adc\wf280.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h
 adc\wf280.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/event_groups.h
+adc\wf280.o: D:\APP\keil\ARM\ARMCC\Bin\..\include\string.h

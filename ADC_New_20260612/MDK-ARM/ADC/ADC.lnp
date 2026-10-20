@@ -5,6 +5,8 @@
 "adc\softuart.o"
 "adc\softiic.o"
 "adc\wf280.o"
+"adc\wf162a.o"
+"adc\jh1400f_driver.o"
 "adc\wf183.o"
 "adc\wf2200.o"
 "adc\wf100s.o"

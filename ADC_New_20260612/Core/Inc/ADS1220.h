@@ -60,6 +60,7 @@ void ADS1220_Init(ADS1220_TypeDef *ads1220);
 void ADS1220_Write(uint8_t dat);
 uint8_t ADS1220ReceiveByte(void);
 void ADS1220_WriteRegister(uint32_t StartAddress, uint32_t NumRegs, uint8_t * pData);
+uint8_t ADS1220_ReadValue(ADS1220_TypeDef *ads1220, uint32_t *value);
 uint32_t GET_ADS1220_Val(ADS1220_TypeDef *ads1220);
 
 /* USER CODE BEGIN Prototypes */

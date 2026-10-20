@@ -99,17 +99,17 @@ static uint8_t ADS1220_ReadDataFrame(uint32_t *value)
 	return 1;
 }
 
-uint32_t GET_ADS1220_Val(ADS1220_TypeDef *ads1220)
+uint8_t ADS1220_ReadValue(ADS1220_TypeDef *ads1220, uint32_t *value)
 {
-	uint32_t value;
+	uint32_t result;
 
-	if (ads1220 == 0) return 0;
+	if (ads1220 == 0 || value == 0) return 0;
 
 	/* A low DRDY before START means an older result is still pending. Read
 	   and discard it so START cannot be followed by an immediate stale read. */
 	if (HAL_GPIO_ReadPin(INT_GPIO_Port, INT_Pin) == GPIO_PIN_RESET)
 	{
-		if (!ADS1220_ReadDataFrame(&value))
+		if (!ADS1220_ReadDataFrame(&result))
 		{
 			ads1220->Data = 0;
 			return 0;
@@ -123,12 +123,21 @@ uint32_t GET_ADS1220_Val(ADS1220_TypeDef *ads1220)
 		return 0;
 	}
 
-	if (!ADS1220_ReadDataFrame(&value))
+	if (!ADS1220_ReadDataFrame(&result))
 	{
 		ads1220->Data = 0;
 		return 0;
 	}
-	ads1220->Data = value;
+	ads1220->Data = result;
+	*value = result;
+	return 1;
+}
+
+uint32_t GET_ADS1220_Val(ADS1220_TypeDef *ads1220)
+{
+	uint32_t value = 0;
+
+	if (!ADS1220_ReadValue(ads1220, &value)) return 0;
 	return value;
 }
 /* USER CODE BEGIN 2 */

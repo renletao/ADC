@@ -74,7 +74,7 @@ ADS1220_TypeDef ADS1220;
 OWI_TypeDef OWI_Device;
 I2CInfo i2c1;
 UartInfo uart1;
-static unsigned voltage, last_power_on_mv, power_on, power_off, writes, reads, selected, last_command, mismatch, nack, adc_inits;
+static unsigned voltage, last_power_on_mv, power_on, power_off, writes, reads, selected, last_command, mismatch, nack, adc_inits, adc_read_fail;
 static unsigned tx_pin, rx_pin, uart_receives, uart_fail_once, flash_words;
 static uint32_t last_gpio_mode;
 static uint32_t adc_raw = 0x123456;
@@ -85,7 +85,17 @@ void osDelay(uint32_t n) {(void)n;}
 void delay_us(uint32_t n) {(void)n;}
 void MCP4725_WriteData_Voltage(uint16_t mv) {voltage=mv;if(mv){last_power_on_mv=mv;++power_on;}else ++power_off;}
 void ADS1220_Init(ADS1220_TypeDef *a) {a->state=1;++adc_inits;}
-uint32_t GET_ADS1220_Val(ADS1220_TypeDef *a) {(void)a;return adc_raw;}
+uint32_t GET_ADS1220_Val(ADS1220_TypeDef *a) {
+ if(a->config[0]==0xD1u)return voltage*1024u;
+ return adc_raw;
+}
+uint8_t ADS1220_ReadValue(ADS1220_TypeDef *a,uint32_t *value) {
+ if(!a||!value)return 0;
+ if(adc_read_fail)return 0;
+ *value=(a->config[0]==0xD1u)?voltage*1024u:adc_raw;
+ a->Data=*value;
+ return 1;
+}
 void ADS1220_WriteRegister(uint32_t a,uint32_t n,uint8_t *p) {(void)a;(void)n;(void)p;}
 void Write_Flash(uint32_t a,uint64_t *p,uint16_t n) {(void)a;flash_words=n;assert(!memcmp(p,&ADS1220,sizeof ADS1220));}
 uint8_t OWI(uint8_t *p,uint32_t t) {(void)t;OWI_Device.cycle=42;p[0]=1;p[1]=2;p[2]=3;return 1;}
@@ -131,7 +141,7 @@ void pp_iic_stop(void){}
 void pp_iic_sendbyte(uint8_t b){(void)b;}
 uint8_t pp_iic_wait_ack(void){return nack;}
 uint8_t pp_iic_readbyte(uint8_t a){(void)a;return 0x44;}
-static void reset(void){writes=reads=selected=last_command=mismatch=nack=power_on=power_off=uart_receives=adc_inits=0;uart_fail_once=0;last_power_on_mv=0;adc_raw=0x123456;IsTaskDone=0;}
+static void reset(void){writes=reads=selected=last_command=mismatch=nack=power_on=power_off=uart_receives=adc_inits=adc_read_fail=0;uart_fail_once=0;last_power_on_mv=0;adc_raw=0x123456;IsTaskDone=0;}
 int main(void){
  uint16_t out[122], c[70]={0};
  reset();c[0]=1;c[1]=TYPE1_SET_VDD;c[2]=0x88;c[3]=0x13;Parse(c,4,out,120);assert(voltage==5000);
@@ -187,7 +197,15 @@ int main(void){
  c[0]=1;c[1]=TYPE1_GET_TASK_STATUS;Parse(c,2,out,120);assert(out[0]==1);
  c[1]=TYPE1_GET_ALLTEST_DATA;Parse(c,2,out,120);assert(out[0]==CMD_ERROR_BUSY);
  RunPendingProductTest();assert(IsTaskDone==0&&power_on==1&&power_off==0&&last_power_on_mv==3300&&voltage==3300&&ADS1220.config[0]==0x39&&adc_inits==0);
- assert(sendBufBy[0]==0x56&&sendBufBy[4]==0x56&&sendBufBy[12]==0x56&&sendBufBy[16]==0);
+ assert(sendBufBy[0]==0x56&&sendBufBy[4]==0x56&&sendBufBy[12]==0x56&&sendBufBy[16]==0&&
+        sendBufBy[32]==3300&&sendBufBy[33]==WF162A_STATUS_REFERENCE_MEASURED);
+ /* A valid zero differential result must not be reported as an ADC timeout. */
+ adc_raw=0;AllTestFor162A(out,120);
+ assert(out[32]==3300&&out[33]==WF162A_STATUS_REFERENCE_MEASURED);
+ adc_read_fail=1;AllTestFor162A(out,120);
+ assert((out[33]&(WF162A_STATUS_REFERENCE_FAILED|WF162A_STATUS_ADC_TIMEOUT)) ==
+        (WF162A_STATUS_REFERENCE_FAILED|WF162A_STATUS_ADC_TIMEOUT) && out[0]==0);
+ adc_read_fail=0;
  c[1]=TYPE1_GET_ALLTEST_DATA;Parse(c,2,out,120);assert(!memcmp(out,sendBufBy,240));
  reset();c[0]=1;c[1]=TYPE1_SET_VDD;c[2]=5000&0xFF;c[3]=5000>>8;Parse(c,4,out,120);reset();
  c[0]=PRODUCT_WF162A;Parse(c,1,out,120);assert(IsTaskDone==1&&out[0]==1);
@@ -196,7 +214,8 @@ int main(void){
     populated for 5 V and retain the extended 16..31 copy.  The 5 V words
     are normalized to the task-9 host's established 3.3 V scale. */
  assert(sendBufBy[0]==0x1D&&sendBufBy[4]==0x1D&&sendBufBy[12]==0x1D&&
-        sendBufBy[16]==0x1D&&sendBufBy[20]==0x1D&&sendBufBy[28]==0x1D);
+        sendBufBy[16]==0x1D&&sendBufBy[20]==0x1D&&sendBufBy[28]==0x1D&&
+        sendBufBy[32]==5000&&sendBufBy[33]==WF162A_STATUS_REFERENCE_MEASURED);
  /* A second task-9 round reuses the selected rail without another 0x201
     command; an explicit 0x201=0 remains the shutdown path. */
  reset();c[0]=PRODUCT_WF162A;Parse(c,1,out,120);RunPendingProductTest();
